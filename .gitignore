@@ -1,0 +1,29 @@
+
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+.env
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
+error_log.txt
+
+# Artifacts
+build/
+dist/
+coverage/
+
+# Data (Sensitive or Large)
+backend/uploads/
+backend/data/*.json
+!backend/data/materials.json
+
+# Prevent pushing secrets
+.env
+.env.local
