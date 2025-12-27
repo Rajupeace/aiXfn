@@ -24,11 +24,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "cross-env REACT_APP_API_URL=http://localhost:5000 react-scripts start",
-    "dev": "concurrently \"npm run backend\" \"npm start\"",
-    "backend": "cd backend && cross-env NODE_ENV=development npm start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
-    "lint": "eslint src --ext .js,.jsx",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
