@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   FaUserGraduate, FaChalkboardTeacher, FaBook, FaFileAlt,
   FaClipboardList, FaEnvelope, FaSignOutAlt, FaPlus, FaTrash,
-  FaEdit, FaSearch, FaHome, FaDownload, FaEye, FaBookOpen, FaLayerGroup, FaRocket, FaRobot, FaInfoCircle, FaFileUpload
+  FaEdit, FaSearch, FaHome, FaDownload, FaEye, FaBookOpen, FaRocket, FaRobot, FaInfoCircle, FaFileUpload
 } from 'react-icons/fa';
 import './AdminDashboard.css';
 import { readFaculty, readStudents, writeStudents, writeFaculty } from '../../utils/localdb';

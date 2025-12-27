@@ -1,75 +1,61 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import { FaChalkboardTeacher, FaUniversity, FaSignOutAlt, FaBookOpen, FaEnvelope, FaBook, FaLayerGroup, FaFileAlt, FaCog, FaClipboardList, FaRobot, FaRocket } from 'react-icons/fa'; // Icons
+import { FaUniversity, FaSignOutAlt, FaBookOpen, FaEnvelope, FaCog, FaRobot, FaRocket, FaClipboardList, FaLayerGroup, FaFileAlt } from 'react-icons/fa'; // Icons
 import './FacultyDashboard.css';
 import MaterialManager from './MaterialManager';
 import FacultyAnalytics from './FacultyAnalytics';
-import FacultyAssignments from './FacultyAssignments';
 import FacultySettings from './FacultySettings';
 import VuAiAgent from '../VuAiAgent/VuAiAgent';
-import { apiGet, apiPost, apiDelete } from '../../utils/apiClient';
+import { apiGet } from '../../utils/apiClient';
 
 const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => {
-  const [activeContext, setActiveContext] = useState(null); // { key: 'Year 1 - C Prog', year, subject, sections: [] } or 'settings' or 'ai-assistant'
+  const [activeContext, setActiveContext] = useState(null);
   const [selectedSections, setSelectedSections] = useState([]);
   const [showSendModal, setShowSendModal] = useState(false);
   const [msgTarget, setMsgTarget] = useState(null);
   const [messages, setMessages] = useState([]);
   const [showMsgModal, setShowMsgModal] = useState(false);
-  const [showAbout, setShowAbout] = useState(false);
   const [materialsList, setMaterialsList] = useState([]);
-
-  const [tasks, setTasks] = useState([]); // Shared Tasks
+  const [tasks] = useState([]);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [studentsList, setStudentsList] = useState([]);
 
-  const [contentSource, setContentSource] = useState([]);
-
-  // Fetch Messages and Materials
   const refreshMaterials = async () => {
     try {
       const mats = await apiGet('/api/materials');
       if (mats) setMaterialsList(mats);
 
-      const cs = await apiGet('/api/content-source');
-      if (cs) setContentSource(cs);
-
-      // Fetch Students
       const studentsData = await apiGet('/api/students');
       if (Array.isArray(studentsData)) setStudentsList(studentsData);
-
-    } catch (e) { console.error("Failed to load materials or students", e); }
+    } catch (e) {
+      console.error("Failed to load materials or students", e);
+    }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       const storedMsgs = JSON.parse(localStorage.getItem('adminMessages') || '[]');
       const relevantMsgs = storedMsgs.filter(m => m.target === 'all' || m.target === 'faculty');
       relevantMsgs.sort((a, b) => new Date(b.date) - new Date(a.date));
       setMessages(relevantMsgs);
-
       await refreshMaterials();
     };
     fetchData();
   }, []);
 
   const navigate = useNavigate();
-  // Transform flat assignments into grouped courses
-  // Input: [{year: '1', section: 'A', subject: 'Math'}, {year: '1', section: 'B', subject: 'Math'}]
-  // Output: { '1-Math': { year: '1', subject: 'Math', sections: ['A', 'B'] } }
+
   const myClasses = useMemo(() => {
     const grouped = {};
     const assignments = facultyData.assignments || [];
 
-    // Handle both old structure (assignments with .sections) and new flat structure
     assignments.forEach(assign => {
-      // Flatten logic: if assign has 'sections' array (old), iterate. If flat (new), use .section
       const sections = assign.sections || [assign.section];
       const subject = assign.subject;
       const year = assign.year;
-
       const key = `${year}-${subject}`;
+
       if (!grouped[key]) {
         grouped[key] = {
           id: key,
@@ -81,7 +67,6 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
       sections.forEach(s => grouped[key].sections.add(s));
     });
 
-    // Convert Sets to Arrays and sort
     return Object.values(grouped).map(g => ({
       ...g,
       sections: Array.from(g.sections).sort()
@@ -94,15 +79,14 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
 
     const newMsg = {
       id: Date.now(),
-      text: `[${msgTarget.subject}] ${text}`, // Tag with subject
-      target: 'students-specific', // Specialized type
+      text: `[${msgTarget.subject}] ${text}`,
+      target: 'students-specific',
       targetYear: msgTarget.year,
       targetSections: msgTarget.sections,
-      sender: displayName,
+      sender: facultyData.name || 'Faculty Member',
       date: new Date().toISOString()
     };
 
-    // Store in adminMessages for simplicity (unified bus)
     const existing = JSON.parse(localStorage.getItem('adminMessages') || '[]');
     existing.push(newMsg);
     localStorage.setItem('adminMessages', JSON.stringify(existing));
@@ -113,7 +97,7 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
 
   const handleClassSelect = (cls) => {
     setActiveContext(cls);
-    setSelectedSections([]); // Reset section selection when changing class
+    setSelectedSections([]);
   };
 
   const toggleSection = (sec) => {
@@ -124,17 +108,12 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
 
   const handleLogout = () => {
     if (window.confirm('Ready to leave the faculty lounge?')) {
-      // Clear all potential auth tokens just to be safe
       localStorage.removeItem('facultyToken');
       localStorage.removeItem('adminToken');
       localStorage.removeItem('studentToken');
-      localStorage.removeItem('userData'); // Clear AI Agent Identity
-
+      localStorage.removeItem('userData');
       setIsAuthenticated(false);
-
       setIsFaculty(false);
-
-      // Force navigation to home/login
       navigate('/');
     }
   };
@@ -149,8 +128,6 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
           <FaRocket className="brand-icon" style={{ fontSize: '1.5rem', color: '#4f46e5' }} />
           <h2>Friendly Notebook</h2>
         </div>
-
-
 
         <nav className="class-nav">
           <div className="nav-label">MY CLASSES</div>
@@ -209,7 +186,7 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
             <FaSignOutAlt /> Logout
           </button>
         </div>
-      </aside >
+      </aside>
 
       <main className="faculty-main">
         {activeContext === 'ai-assistant' ? (
@@ -297,7 +274,6 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
               </div>
             </header>
 
-            {/* AI Promo Card - Special Sparkle Look */}
             <div
               onClick={() => setActiveContext('ai-assistant')}
               className="animate-fade-in"
@@ -315,7 +291,6 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
                 position: 'relative',
                 overflow: 'hidden'
               }}>
-              {/* Decorative Circles */}
               <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: '200px', height: '200px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', zIndex: 0 }}></div>
               <div style={{ position: 'absolute', bottom: '-20%', left: '10%', width: '150px', height: '150px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', zIndex: 0 }}></div>
 
@@ -358,19 +333,9 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
                   <p style={{ color: '#78350f', margin: 0 }}>
                     Please contact the admin to assign subjects and sections to your account.
                   </p>
-                  <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.5)', borderRadius: '8px' }}>
-                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#78350f' }}>
-                      <strong>What you'll see here:</strong><br />
-                      • Subject name<br />
-                      • Year and sections you teach<br />
-                      • Number of students in each section<br />
-                      • Quick access to manage materials
-                    </p>
-                  </div>
                 </div>
               ) : (
                 myClasses.map(cls => {
-                  // Calculate students per section
                   const sectionBreakdown = cls.sections.map(section => {
                     const count = studentsList.filter(s =>
                       String(s.year) === String(cls.year) &&
@@ -413,7 +378,6 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
                           </span>
                         </div>
 
-                        {/* Section-wise breakdown */}
                         <div style={{
                           background: '#f8fafc',
                           borderRadius: '8px',
@@ -450,8 +414,6 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
               )}
             </div>
 
-
-            {/* Profile / Faculty Details Section (New) */}
             <div className="faculty-profile-section animate-fade-in" style={{ marginTop: '3rem', background: '#fff', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
               <h3 style={{ fontSize: '1.2rem', color: '#334155', marginBottom: '1.5rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem' }}>Faculty Profile Details</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem' }}>
@@ -473,7 +435,6 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
                 </div>
               </div>
             </div>
-
           </div>
         ) : (
           <div className="class-workspace animate-fade-in">
@@ -503,20 +464,12 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
               </div>
             </header>
 
-            {/* SEND MESSAGE MODAL */}
             {showSendModal && (
               <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ background: 'white', padding: '2rem', borderRadius: '12px', width: '500px', maxWidth: '95%' }}>
                   <h2>Send Message to Class</h2>
                   <p style={{ marginBottom: '1rem', color: '#64748b' }}>Target: Year {msgTarget.year} - {msgTarget.subject}</p>
-
-                  <textarea
-                    id="facMsgText"
-                    rows="5"
-                    placeholder="Type your message here..."
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1rem' }}
-                  ></textarea>
-
+                  <textarea id="facMsgText" rows="5" placeholder="Type your message here..." style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1rem' }} />
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                     <button onClick={() => setShowSendModal(false)} className="btn-secondary" style={{ padding: '0.5rem 1rem' }}>Cancel</button>
                     <button onClick={handleSendMessage} className="btn-primary" style={{ padding: '0.5rem 1rem' }}>Send Broadcast</button>
@@ -537,15 +490,7 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
                 <button
                   className={`section-pill ${selectedSections.length === activeContext.sections.length ? 'active' : ''}`}
                   onClick={() => selectedSections.length === activeContext.sections.length ? setSelectedSections([]) : setSelectedSections([...activeContext.sections])}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '50px',
-                    border: '1px solid #e2e8f0',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    fontWeight: 600,
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
+                  style={{ padding: '0.75rem 1.5rem', borderRadius: '50px', border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }}
                 >
                   🏫 All Sections
                 </button>
@@ -554,32 +499,16 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
                     key={sec}
                     className={`section-pill ${selectedSections.includes(sec) ? 'active' : ''}`}
                     onClick={() => toggleSection(sec)}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '50px',
-                      border: '1px solid #e2e8f0',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem',
-                      fontWeight: 600,
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                    }}
+                    style={{ padding: '0.75rem 1.5rem', borderRadius: '50px', border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }}
                   >
                     📍 Section {sec}
                   </button>
                 ))}
               </div>
-
-              {selectedSections.length === 0 && (
-                <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fffbeb', borderRadius: '12px', color: '#92400e', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px solid #fef3c7' }}>
-                  <span style={{ fontSize: '1.2rem' }}>💡</span>
-                  <span>Select at least one section above to enable content management tools for this course.</span>
-                </div>
-              )}
             </div>
 
             {selectedSections.length > 0 ? (
               <div className="manager-wrapper">
-                {/* Pass formatted props to MaterialManager to keep it happy */}
                 <MaterialManager
                   selectedSubject={`${activeContext.subject} - Year ${activeContext.year}`}
                   selectedSections={selectedSections}
@@ -587,7 +516,6 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
                   onUploadSuccess={refreshMaterials}
                 />
 
-                {/* --- COURSE CONTENT LIBRARY (Tree View) --- */}
                 <div className="content-tree-section animate-fade-in">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
                     <div style={{ padding: '0.8rem', background: '#e0e7ff', borderRadius: '12px', color: '#4338ca' }}>
@@ -597,77 +525,55 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
                       <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#1e293b' }}>Course Content Library</h2>
                       <p style={{ margin: 0, color: '#64748b' }}>Browse all uploaded materials for this subject</p>
                     </div>
-                    <button
-                      onClick={() => {
-                        if (window.confirm("Use AI to generate a quiz from these materials? (Feature in Beta)")) {
-                          alert("AI Agent is analyzing " + materialsList.length + " documents to generate a quiz...");
-                          // Future: Trigger AI Agent API here
-                        }
-                      }}
-                      style={{ marginLeft: 'auto', background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)', color: 'white', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                    >
-                      <FaRobot /> Auto-Quiz
-                    </button>
                   </div>
 
                   {(() => {
-                    // Filter materials for this Subject + Year
-                    // Match loosely
                     const courseMaterials = materialsList.filter(m =>
                       (m.subject === activeContext.subject || m.subject.includes(activeContext.subject)) &&
                       String(m.year) === String(activeContext.year)
                     );
 
-                    if (courseMaterials.length === 0) return <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', fontStyle: 'italic' }}>No materials uploaded yet. Use the manager above to add content.</div>;
+                    if (courseMaterials.length === 0) return <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', fontStyle: 'italic' }}>No materials uploaded yet.</div>;
 
-                    // Group by Module -> Unit
-                    // If no module, group under "General"
                     const grouped = courseMaterials.reduce((acc, m) => {
                       const mod = m.module ? `Module ${m.module}` : 'General Resources';
                       if (!acc[mod]) acc[mod] = {};
-
                       const unit = m.unit ? `Unit ${m.unit}` : 'General';
                       if (!acc[mod][unit]) acc[mod][unit] = [];
-
                       acc[mod][unit].push(m);
                       return acc;
                     }, {});
 
                     return Object.keys(grouped).sort().map(moduleName => (
                       <div key={moduleName} className="tree-module" style={{ background: '#fcfcfd', borderRadius: '16px', padding: '1.5rem', border: '1px solid #f1f5f9', marginBottom: '2.5rem' }}>
-                        <div className="tree-module-header" style={{ borderBottom: '2px solid #e2e8f0' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div className="tree-module-header" style={{ borderBottom: '2px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}>
                             <FaLayerGroup style={{ color: '#6366f1' }} />
                             {moduleName}
                           </span>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#eff6ff', padding: '0.25rem 0.75rem', borderRadius: '20px', color: '#1d4ed8' }}>
-                            {Object.values(grouped[moduleName]).reduce((a, b) => a + b.length, 0)} Materials
-                          </span>
                         </div>
                         {Object.keys(grouped[moduleName]).sort().map(unitName => (
-                          <div key={unitName} className="tree-unit">
-                            <div className="tree-unit-title" style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#cbd5e1' }}></div>
+                          <div key={unitName} className="tree-unit" style={{ marginTop: '1rem' }}>
+                            <div className="tree-unit-title" style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#cbd5e1' }} />
                               {unitName !== 'General' ? unitName : 'Resources'}
                             </div>
-                            <div className="tree-files-grid">
+                            <div className="tree-files-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                               {grouped[moduleName][unitName].map(file => (
                                 <a
                                   key={file.id}
-                                  href={`http://localhost:5000${file.url}`}
+                                  href={file.url.startsWith('http') ? file.url : `http://localhost:5000${file.url}`}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="tree-file-card"
+                                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'white', borderRadius: '12px', border: '1px solid #f1f5f9' }}
                                 >
-                                  <div className={`file-icon-wrapper ${file.type}`} style={{ padding: '0.6rem', background: 'white', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                  <div style={{ padding: '0.6rem', background: '#f8fafc', borderRadius: '10px' }}>
                                     {file.type === 'videos' ? <FaLayerGroup style={{ color: '#10b981' }} /> : <FaFileAlt style={{ color: '#3b82f6' }} />}
                                   </div>
                                   <div style={{ overflow: 'hidden' }}>
-                                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#334155', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{file.title}</div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
-                                      <span className={`badge-pill small ${file.type}`} style={{ fontSize: '0.65rem' }}>{file.type}</span>
-                                      <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{file.originalName ? file.originalName.split('.').pop().toUpperCase() : 'PDF'}</span>
-                                    </div>
+                                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{file.title}</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{file.type}</div>
                                   </div>
                                 </a>
                               ))}
@@ -678,84 +584,16 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
                     ));
                   })()}
                 </div>
-
               </div>
             ) : (
-              <div className="select-prompt">
+              <div className="select-prompt" style={{ textAlign: 'center', padding: '4rem', color: '#64748b' }}>
                 <p>Please select at least one section above to start managing content.</p>
               </div>
             )}
           </div>
-        )
-        }
-      </main >
-
-
-      {/* GLOBAL AI FAB For Faculty */}
-
-
-      {/* About Modal */}
-      {showAbout && (
-        <div className="modal-overlay" style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(12px)', animation: 'fadeIn 0.4s ease-out'
-        }}>
-          <div className="modal-content animate-slide-up" style={{
-            background: 'rgba(255, 255, 255, 0.95)', width: '100%', maxWidth: '440px', borderRadius: '32px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.3)', display: 'flex', flexDirection: 'column', position: 'relative'
-          }}>
-            <div style={{
-              padding: '2rem 2rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                <div style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                  <FaRocket />
-                </div>
-                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#1e293b', letterSpacing: '-0.5px' }}>Friendly Professor</h2>
-              </div>
-              <button onClick={() => setShowAbout(false)} style={{ background: '#f1f5f9', border: 'none', width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: '#64748b', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'rotate(90deg)'} onMouseLeave={e => e.currentTarget.style.transform = 'rotate(0deg)'}>&times;</button>
-            </div>
-
-            <div style={{ padding: '0 2rem 2rem', overflowY: 'auto' }}>
-              <div style={{ textAlign: 'center', marginBottom: '2.5rem', position: 'relative' }}>
-                <div style={{ width: '100px', height: '100px', margin: '0 auto 1.2rem', borderRadius: '30px', overflow: 'hidden', border: '4px solid #fff', boxShadow: '0 10px 20px rgba(0,0,0,0.1)', background: '#f0f9ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', fontSize: '3rem', fontWeight: 900 }}>
-                  {(displayName || 'F').substring(0, 1).toUpperCase()}
-                </div>
-                <h3 style={{ margin: '0 0 0.3rem', color: '#1e293b', fontSize: '1.2rem', fontWeight: 700 }}>Prof. {displayName}</h3>
-                <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>Academic Mentor • Vignan University</p>
-              </div>
-
-              <div style={{ background: 'rgba(79, 70, 229, 0.04)', borderRadius: '24px', padding: '1.5rem', border: '1px solid rgba(79, 70, 229, 0.1)' }}>
-                <h4 style={{ color: '#4f46e5', margin: '0 0 1rem 0', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Instructional Tools</h4>
-                <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '0.8rem' }}>
-                  {[
-                    { t: 'Smart Content Studio', d: 'Upload & bundle course materials' },
-                    { t: 'Group Broadcasting', d: 'Instant alerts to specific sections' },
-                    { t: 'Attendance Insights', d: 'Real-time student participation tracking' },
-                    { t: 'AI Assistant', d: 'Automated quiz & summary generation' }
-                  ].map((feat, i) => (
-                    <li key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                      <div style={{ color: '#10b981', marginTop: '3px' }}>✓</div>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#334155' }}>{feat.t}</div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{feat.d}</div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0 0 0.5rem 0' }}>POWERED BY</p>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#1e293b', letterSpacing: '-0.5px' }}>FRIENDLY NOTEBOOK</span>
-                  <div style={{ height: '4px', width: '4px', borderRadius: '50%', background: '#4f46e5' }}></div>
-                  <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>v2.5.0</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div >
+        )}
+      </main>
+    </div>
   );
 };
 

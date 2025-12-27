@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FaLock, FaUser, FaEnvelope, FaIdCard, FaBuilding, FaUserTie } from 'react-icons/fa';
-import { apiPost, apiGet } from '../../utils/apiClient';
+import React, { useState } from 'react';
+import { FaLock, FaUser, FaEnvelope, FaIdCard, FaBuilding } from 'react-icons/fa';
 import './FacultyDashboard.css'; // Reuse faculty styles
 
 const FacultySettings = ({ facultyData }) => {
@@ -19,7 +18,7 @@ const FacultySettings = ({ facultyData }) => {
         confirm: ''
     });
 
-    const [isLoading, setIsLoading] = useState(false);
+
 
     const handleProfileChange = (e) => {
         setProfile({ ...profile, [e.target.name]: e.target.value });

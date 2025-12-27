@@ -15,18 +15,18 @@ const FacultyAssignments = ({ facultyId, facultyToken }) => {
         description: ''
     });
 
-    const fetchAssignments = async () => {
+    const fetchAssignments = React.useCallback(async () => {
         try {
             const data = await apiGet(`/api/teaching-assignments/faculty/${facultyId}`);
             setAssignments(data || []);
         } catch (e) {
             console.error('Failed to load assignments', e);
         }
-    };
+    }, [facultyId]);
 
     useEffect(() => {
         fetchAssignments();
-    }, []);
+    }, [fetchAssignments]);
 
     const handleChange = e => {
         const { name, value } = e.target;

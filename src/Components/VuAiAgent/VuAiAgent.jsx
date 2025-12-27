@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaPaperPlane, FaRobot } from 'react-icons/fa';
-import { apiPost } from '../../utils/apiClient';
-import { apiGet } from '../../utils/apiClient';
+import { apiPost, apiGet } from '../../utils/apiClient';
 
 const VuAiAgent = () => {
-    const defaultBotMessage = {
+    const defaultBotMessage = React.useMemo(() => ({
         id: 'vuai-greeting',
         sender: 'bot',
         text: 'Hello! I am your VuAiAgent. I can help you with syllabus, schedules, and academic queries. What\'s on your mind?'
-    };
+    }), []);
 
     const [messages, setMessages] = useState([defaultBotMessage]);
     const [input, setInput] = useState('');
