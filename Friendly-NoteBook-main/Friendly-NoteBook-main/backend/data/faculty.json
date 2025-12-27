@@ -1,0 +1,18 @@
+[
+  {
+    "name": "bobby",
+    "facultyId": "23104470",
+    "email": "",
+    "password": "23104470",
+    "assignments": [
+      {
+        "year": "3",
+        "section": "13",
+        "subject": "software engineer "
+      }
+    ],
+    "createdAt": "2025-12-27T09:39:56.470Z",
+    "facultyToken": "77acb512-c96f-41da-86c2-13fad26b6125",
+    "tokenIssuedAt": "2025-12-27T09:40:31.521Z"
+  }
+]

@@ -1,0 +1,25 @@
+[
+  {
+    "name": " mary-satvika",
+    "facultyId": "ReddyFBN@1228",
+    "email": "",
+    "password": "ReddyFBN",
+    "assignments": [
+      {
+        "year": "3",
+        "section": "5",
+        "subject": "cn"
+      },
+      {
+        "year": "3",
+        "section": "11",
+        "subject": "cn"
+      }
+    ],
+    "createdAt": "2025-12-13T07:11:23.125Z",
+    "department": "CSE",
+    "designation": "teacher",
+    "facultyToken": "e25b0327-b884-4150-92b0-16075ce400b6",
+    "tokenIssuedAt": "2025-12-15T04:23:56.284Z"
+  }
+]

@@ -1,8 +1,8 @@
 
 # Dependencies
-node_modules/
-venv/
-__pycache__/
+**/node_modules/
+**/venv/
+**/__pycache__/
 .env
 .DS_Store
 
@@ -28,3 +28,4 @@ backend/data/*.json
 .env
 .env.local
 Friendly-NoteBook-main/Friendly-NoteBook-main.zip
+*.zip
