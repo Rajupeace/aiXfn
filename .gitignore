@@ -27,3 +27,4 @@ backend/data/*.json
 # Prevent pushing secrets
 .env
 .env.local
+Friendly-NoteBook-main/Friendly-NoteBook-main.zip
