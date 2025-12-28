@@ -96,13 +96,42 @@ export async function apiDelete(path) {
 
 export async function apiUpload(path, formData) {
   if (!API_URL) throw new Error('API_URL not configured');
-  const res = await fetch(`${API_URL.replace(/\/$/, '')}${path}`, {
-    method: 'POST',
-    body: formData,
-    headers: { ...getAuthHeaders() },
-  });
-  if (!res.ok) throw new Error(`UPLOAD ${path} failed: ${res.status}`);
-  return res.json();
+
+  const headers = getAuthHeaders();
+  const adminToken = window.localStorage.getItem('adminToken');
+  const facultyToken = window.localStorage.getItem('facultyToken');
+
+  console.log('[apiUpload] Starting upload to:', path);
+  console.log('[apiUpload] Auth state:', { hasAdminToken: !!adminToken, hasFacultyToken: !!facultyToken });
+
+  if (!adminToken && !facultyToken) {
+    throw new Error('No authentication token found. Please log out and log in again.');
+  }
+
+  try {
+    const res = await fetch(`${API_URL.replace(/\/$/, '')}${path}`, {
+      method: 'POST',
+      body: formData,
+      headers: headers,
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      console.error('[apiUpload] Upload failed:', res.status, data);
+      const errorMsg = data.message || data.error || `Upload failed with status ${res.status}`;
+      throw new Error(errorMsg);
+    }
+
+    console.log('[apiUpload] Upload successful:', data);
+    return data;
+  } catch (error) {
+    console.error('[apiUpload] Error:', error);
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Cannot connect to server. Is the backend running at ' + API_URL + '?');
+    }
+    throw error;
+  }
 }
 
 export async function adminLogin(adminId, password) {
