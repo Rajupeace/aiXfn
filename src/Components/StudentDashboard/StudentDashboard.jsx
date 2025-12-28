@@ -19,6 +19,23 @@ const FALLBACK = {
     email: 'john.doe@example.edu'
 };
 
+const SUBJECT_ALIASES = {
+    'cn': ['computer networks', 'computer network'],
+    'os': ['operating systems', 'operating system'],
+    'dbms': ['database management systems', 'database management system'],
+    'daa': ['design and analysis of algorithms', 'design & analysis of algorithms'],
+    'dld': ['digital logic design'],
+    'coa': ['computer organization and architecture', 'computer organization & architecture'],
+    'wt': ['web technologies', 'web technology'],
+    'cd': ['compiler design'],
+    'ai': ['artificial intelligence'],
+    'ml': ['machine learning'],
+    'ds': ['data structures'],
+    'se': ['software engineering'],
+    'toc': ['theory of computation'],
+    'cc': ['cloud computing']
+};
+
 export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
     const navigate = useNavigate();
     const data = { ...FALLBACK, ...studentData };
@@ -97,22 +114,7 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
     };
 
     // Subject Alias Map for matching abbreviations
-    const SUBJECT_ALIASES = {
-        'cn': ['computer networks', 'computer network'],
-        'os': ['operating systems', 'operating system'],
-        'dbms': ['database management systems', 'database management system'],
-        'daa': ['design and analysis of algorithms', 'design & analysis of algorithms'],
-        'dld': ['digital logic design'],
-        'coa': ['computer organization and architecture', 'computer organization & architecture'],
-        'wt': ['web technologies', 'web technology'],
-        'cd': ['compiler design'],
-        'ai': ['artificial intelligence'],
-        'ml': ['machine learning'],
-        'ds': ['data structures'],
-        'se': ['software engineering'],
-        'toc': ['theory of computation'],
-        'cc': ['cloud computing']
-    };
+
 
     const yearData = useMemo(() => {
         // 1. Start with Empty Structure (No Static Data)
