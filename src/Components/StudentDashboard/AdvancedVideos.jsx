@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { FaPlay, FaSearch, FaFilter } from 'react-icons/fa';
+import { FaPlay, FaSearch } from 'react-icons/fa';
 
 const AdvancedVideos = () => {
     const [videos, setVideos] = useState([]);

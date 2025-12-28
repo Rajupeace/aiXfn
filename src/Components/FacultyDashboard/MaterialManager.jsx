@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { apiUpload, apiPost } from '../../utils/apiClient';
+import { apiUpload } from '../../utils/apiClient';
 
 const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUploadSuccess }) => {
     // Current active upload type (single selection state)
@@ -15,7 +15,6 @@ const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUp
     });
     const [assignmentDetails, setAssignmentDetails] = useState({ dueDate: '', message: '' });
     const [activeTab, setActiveTab] = useState('upload');
-    const [myUploads, setMyUploads] = useState([]);
     // State for Admin/Global resources
     const [globalResources, setGlobalResources] = useState([]);
 
@@ -23,7 +22,7 @@ const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUp
         if (selectedSubject && selectedSections.length > 0) {
             fetchGlobalResources();
         }
-    }, [selectedSubject, selectedSections]);
+    }, [selectedSubject, selectedSections]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchGlobalResources = async () => {
         if (!selectedSubject) return;

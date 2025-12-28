@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../../utils/apiClient';
-import { FaSignOutAlt, FaDownload, FaCog, FaUserEdit, FaClipboardList, FaEnvelope, FaCamera, FaTrash, FaRobot, FaBookOpen, FaRocket, FaUserTie } from 'react-icons/fa';
+import { FaSignOutAlt, FaDownload, FaCog, FaUserEdit, FaClipboardList, FaEnvelope, FaTrash, FaRobot, FaBookOpen, FaRocket, FaUserTie } from 'react-icons/fa';
 import PasswordSettings from '../Settings/PasswordSettings';
-import { getYearData } from './branchData';
+// import { getYearData } from './branchData';
 import VuAiAgent from '../VuAiAgent/VuAiAgent';
 import './StudentDashboard.css';
 
@@ -260,7 +260,7 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
         });
 
         return { semesters };
-    }, [branch, selectedYear, extraCourses]);
+    }, [branch, selectedYear, extraCourses, serverMaterials]);
 
     // If student has an explicit semester, show only that semester; otherwise allow both semesters of the year
     // If student has an explicit semester, show only that semester; otherwise allow both semesters of the year
@@ -344,39 +344,7 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
         setView('overview');
     };
 
-    const handleLogout = (e) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
 
-        try {
-            // Clear all authentication related data
-            localStorage.removeItem('user');
-            localStorage.removeItem('token');
-            localStorage.removeItem('isAuthenticated');
-            localStorage.removeItem('userRole');
-            localStorage.removeItem('studentData');
-
-            // Clear any session storage if used
-            sessionStorage.clear();
-
-            // Redirect to login page with a timestamp to prevent caching
-            navigate('/login', {
-                replace: true,
-                state: { from: '/student-dashboard', timestamp: new Date().getTime() }
-            });
-
-            // Force a full page reload to clear any state
-            // Force a full page reload to clear any state
-            window.location.href = '/';
-
-        } catch (error) {
-            console.error('Error during logout:', error);
-            // Even if there's an error, still try to redirect
-            window.location.href = '/login';
-        }
-    };
 
     // Update user data when profile is updated
     const handleProfileUpdate = (updatedData) => {

@@ -23,7 +23,7 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [studentsList, setStudentsList] = useState([]);
 
-  const [contentSource, setContentSource] = useState([]);
+  const [, setContentSource] = useState([]);
 
   // Fetch Messages and Materials
   const refreshMaterials = async () => {

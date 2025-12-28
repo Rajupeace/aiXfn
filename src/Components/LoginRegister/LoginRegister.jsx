@@ -12,10 +12,7 @@ const LoginRegister = ({ setIsAuthenticated, setStudentData, setIsAdmin, setIsFa
   const [loginPassword, setLoginPassword] = useState('');
 
   // Password Reset State
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetCode, setResetCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [resetStep, setResetStep] = useState(1);
+
 
   // Standard Section Options: A-P and 1-20
   const alphaSections = Array.from({ length: 16 }, (_, i) => String.fromCharCode(65 + i));
