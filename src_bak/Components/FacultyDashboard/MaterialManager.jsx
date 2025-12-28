@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { apiUpload, apiPost } from '../../utils/apiClient';
+import { apiUpload } from '../../utils/apiClient';
 
 const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUploadSuccess }) => {
     // Current active upload type (single selection state)
@@ -15,17 +15,9 @@ const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUp
     });
     const [assignmentDetails, setAssignmentDetails] = useState({ dueDate: '', message: '' });
     const [activeTab, setActiveTab] = useState('upload');
-    const [myUploads, setMyUploads] = useState([]);
-    // State for Admin/Global resources
     const [globalResources, setGlobalResources] = useState([]);
 
-    React.useEffect(() => {
-        if (selectedSubject && selectedSections.length > 0) {
-            fetchGlobalResources();
-        }
-    }, [selectedSubject, selectedSections]);
-
-    const fetchGlobalResources = async () => {
+    const fetchGlobalResources = React.useCallback(async () => {
         if (!selectedSubject) return;
         const [subject, year] = selectedSubject.split(' - Year ');
 
@@ -43,9 +35,14 @@ const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUp
             }
         } catch (err) {
             console.error("Error fetching materials:", err);
-            // Fallback skipped for brevity, API preferred
         }
-    };
+    }, [selectedSubject, selectedSections]);
+
+    React.useEffect(() => {
+        if (selectedSubject && selectedSections.length > 0) {
+            fetchGlobalResources();
+        }
+    }, [selectedSubject, selectedSections, fetchGlobalResources]);
 
     const handleFileChange = (e) => {
         const { name, files } = e.target;

@@ -1,6 +1,6 @@
 {
-  "name": "vignan-university-portal",
-  "version": "1.0.0",
+  "name": "my-app",
+  "version": "1.0.1",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.0",
