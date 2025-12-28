@@ -301,16 +301,29 @@ app.post('/api/materials', /* requireAuthMongo, */ uploadLocal.single('file'), (
 });
 
 // Update existing material (file-based or Mongo fallback)
-app.put('/api/materials/:id', /* requireAuthMongo, */ uploadLocal.single('file'), (req, res) => {
+app.put('/api/materials/:id', /* requireAuthMongo, */ uploadLocal.single('file'), async (req, res) => {
   try {
-    if (mongoose.connection.readyState === 1 && typeof materialController !== 'undefined' && materialController.updateMaterial) {
-      req.user = req.user || authFromHeaders(req);
-      if (!req.user) {
-        return res.status(401).json({ message: 'Authentication failed.' });
-      }
-      return materialController.updateMaterial(req, res);
+    req.user = req.user || authFromHeaders(req);
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication failed.' });
     }
-    // For file-based storage, delegate to existing handler
+
+    // Try MongoDB first IF connected
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const Material = require('./models/Material');
+        const material = await Material.findById(req.params.id);
+        if (material) {
+          // Found in MongoDB, use controller
+          return materialController.updateMaterial(req, res);
+        }
+        // Material not in MongoDB, fall through to file-based
+      } catch (mongoErr) {
+        console.warn('[PUT /api/materials] MongoDB lookup failed, trying file-based:', mongoErr.message);
+      }
+    }
+
+    // Fallback: File-based storage
     return handleFileBasedUpdate(req, res);
   } catch (err) {
     console.error('PUT /api/materials error:', err);
@@ -355,9 +368,15 @@ const handleFileBasedUpdate = (req, res) => {
   try {
     const { id } = req.params;
     const all = materialsDB.read();
-    const idx = all.findIndex(m => m.id === id || m._id === id);
+    // Normalize ID comparison to handle string/ObjectId mismatches
+    const idx = all.findIndex(m =>
+      String(m.id) === String(id) ||
+      String(m._id) === String(id) ||
+      (m.id && String(m.id).includes(id)) ||
+      (m._id && String(m._id).includes(id))
+    );
 
-    if (idx === -1) return res.status(404).json({ message: 'Material not found' });
+    if (idx === -1) return res.status(404).json({ message: 'Material not found in local database' });
 
     // Resolve user (support header-based auth in file-mode)
     const user = req.user || authFromHeaders(req);
@@ -409,30 +428,48 @@ app.delete('/api/materials/:id', async (req, res, next) => {
     req.user = req.user || authFromHeaders(req);
     if (!req.user) return res.status(401).json({ message: 'Not authorized' });
 
-    if (mongoose.connection.readyState === 1 && typeof materialController !== 'undefined' && materialController.deleteMaterial) {
-      return materialController.deleteMaterial(req, res, next);
-    } else {
-      // File-based delete
+
+    // Try MongoDB first IF connected
+    if (mongoose.connection.readyState === 1) {
       try {
-        const { id } = req.params;
-        const all = materialsDB.read();
-        const idx = all.findIndex(m => m.id === id || m._id === id);
-
-        if (idx === -1) return res.status(404).json({ message: 'Material not found' });
-
-        const material = all[idx];
-        // Allow admin or owner
-        if (String(material.uploaderId) !== String(req.user.id) && req.user.role !== 'admin') {
-          return res.status(401).json({ message: 'Not authorized' });
+        const Material = require('./models/Material');
+        const material = await Material.findById(req.params.id);
+        if (material) {
+          // Found in MongoDB, use controller
+          return materialController.deleteMaterial(req, res, next);
         }
-
-        const newAll = all.filter((_, i) => i !== idx);
-        materialsDB.write(newAll);
-        res.json({ message: 'Material removed' });
-      } catch (err) {
-        console.error('File-based delete error:', err);
-        res.status(500).json({ message: 'Failed to delete material' });
+        // Material not in MongoDB, fall through to file-based
+      } catch (mongoErr) {
+        console.warn('[DELETE /api/materials] MongoDB lookup failed, trying file-based:', mongoErr.message);
       }
+    }
+
+    // File-based delete
+    try {
+      const { id } = req.params;
+      const all = materialsDB.read();
+      // Normalize ID comparison
+      const idx = all.findIndex(m =>
+        String(m.id) === String(id) ||
+        String(m._id) === String(id) ||
+        (m.id && String(m.id).includes(id)) ||
+        (m._id && String(m._id).includes(id))
+      );
+
+      if (idx === -1) return res.status(404).json({ message: 'Material not found' });
+
+      const material = all[idx];
+      // Allow admin or owner
+      if (String(material.uploaderId) !== String(req.user.id) && req.user.role !== 'admin') {
+        return res.status(401).json({ message: 'Not authorized' });
+      }
+
+      const newAll = all.filter((_, i) => i !== idx);
+      materialsDB.write(newAll);
+      res.json({ message: 'Material removed' });
+    } catch (err) {
+      console.error('File-based delete error:', err);
+      res.status(500).json({ message: 'Failed to delete material' });
     }
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
