@@ -18,6 +18,8 @@ const materialController = require('./controllers/materialController');
 const app = express();
 app.use(cors());
 app.use(express.json());
+// Serve uploads statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 let server;
 
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -285,6 +287,10 @@ const handleFileBasedUpload = (req, res) => {
 app.post('/api/materials', /* requireAuthMongo, */ uploadLocal.single('file'), (req, res) => {
   try {
     if (mongoose.connection.readyState === 1 && typeof materialController !== 'undefined' && materialController.uploadMaterial) {
+      req.user = req.user || authFromHeaders(req);
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication failed. Please log in again.' });
+      }
       return materialController.uploadMaterial(req, res);
     }
     return handleFileBasedUpload(req, res);
@@ -298,6 +304,10 @@ app.post('/api/materials', /* requireAuthMongo, */ uploadLocal.single('file'), (
 app.put('/api/materials/:id', /* requireAuthMongo, */ uploadLocal.single('file'), (req, res) => {
   try {
     if (mongoose.connection.readyState === 1 && typeof materialController !== 'undefined' && materialController.updateMaterial) {
+      req.user = req.user || authFromHeaders(req);
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication failed.' });
+      }
       return materialController.updateMaterial(req, res);
     }
     // For file-based storage, delegate to existing handler
@@ -394,35 +404,40 @@ const handleFileBasedUpdate = (req, res) => {
   }
 };
 
-// app.delete('/api/materials/:id', requireAuthMongo, (req, res, next) => {
-//   if (mongoose.connection.readyState === 1) {
-//     return materialController.deleteMaterial(req, res, next);
-//   } else {
-//     // File-based delete
-//     try {
-//       const { id } = req.params;
-//       const all = materialsDB.read();
-//       const idx = all.findIndex(m => m.id === id || m._id === id);
+app.delete('/api/materials/:id', async (req, res, next) => {
+  try {
+    req.user = req.user || authFromHeaders(req);
+    if (!req.user) return res.status(401).json({ message: 'Not authorized' });
 
-//       if (idx === -1) return res.status(404).json({ message: 'Material not found' });
+    if (mongoose.connection.readyState === 1 && typeof materialController !== 'undefined' && materialController.deleteMaterial) {
+      return materialController.deleteMaterial(req, res, next);
+    } else {
+      // File-based delete
+      try {
+        const { id } = req.params;
+        const all = materialsDB.read();
+        const idx = all.findIndex(m => m.id === id || m._id === id);
 
-//       const material = all[idx];
-//       if (material.uploaderId !== req.user.id && req.user.role !== 'admin') {
-//         return res.status(401).json({ message: 'Not authorized' });
-//       }
+        if (idx === -1) return res.status(404).json({ message: 'Material not found' });
 
-//       // Note: File deletion from disk is skipped for safety/simplicity in fallback, 
-//       // but we could implement it using fs.unlink if needed.
+        const material = all[idx];
+        // Allow admin or owner
+        if (String(material.uploaderId) !== String(req.user.id) && req.user.role !== 'admin') {
+          return res.status(401).json({ message: 'Not authorized' });
+        }
 
-//       const newAll = all.filter((_, i) => i !== idx);
-//       materialsDB.write(newAll);
-//       res.json({ message: 'Material removed' });
-//     } catch (err) {
-//       console.error('File-based delete error:', err);
-//       res.status(500).json({ message: 'Failed to delete material' });
-//     }
-//   }
-// });
+        const newAll = all.filter((_, i) => i !== idx);
+        materialsDB.write(newAll);
+        res.json({ message: 'Material removed' });
+      } catch (err) {
+        console.error('File-based delete error:', err);
+        res.status(500).json({ message: 'Failed to delete material' });
+      }
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
 
 // API endpoint to list content_source files
 app.get('/api/content-source', /* requireAuthMongo, */(req, res) => {

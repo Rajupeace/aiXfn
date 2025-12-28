@@ -1,1 +1,35 @@
-[]
+[
+  {
+    "id": "50d364b1-607c-42b9-893e-b2bf44a6464d",
+    "userId": "ReddyFBN@1228",
+    "role": "admin",
+    "message": "hi",
+    "response": "Hello Administrator! Welcome to VuAiAgent. I'm here to help you manage the entire system, users, and administrative tasks. What can I assist you with today?",
+    "context": {
+      "name": "Administrator"
+    },
+    "timestamp": "2025-12-28T04:08:04.417Z"
+  },
+  {
+    "id": "883200b7-79fa-454f-b6c2-7fc95eb93458",
+    "userId": "ReddyFBN@1228",
+    "role": "admin",
+    "message": "hello",
+    "response": "Hello Administrator! Welcome to VuAiAgent. I'm here to help you manage the entire system, users, and administrative tasks. What can I assist you with today?",
+    "context": {
+      "name": "Administrator"
+    },
+    "timestamp": "2025-12-28T04:08:21.861Z"
+  },
+  {
+    "id": "46be4813-8b12-44fe-946f-d236bbbb20d6",
+    "userId": "ReddyFBN@1228",
+    "role": "admin",
+    "message": "how many student is dashboard",
+    "response": "Manage students in the 'Students' section:\n- Add new students\n- Edit student details\n- Delete students\n- View all students by year/branch/section\n- Export student data\n\nAll changes sync automatically across the system.",
+    "context": {
+      "name": "Administrator"
+    },
+    "timestamp": "2025-12-28T04:08:46.253Z"
+  }
+]

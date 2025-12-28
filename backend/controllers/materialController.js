@@ -151,7 +151,10 @@ exports.uploadMaterial = async (req, res) => {
     let fileSize;
 
     if (req.file) {
-      fileUrl = `/uploads/${roleFolder}/${req.file.filename}`;
+      // Since we are using uploadLocal which stores in root uploads/
+      // we should not append roleFolder to URL unless we change uploadLocal.
+      // For now, index.js serves /uploads maps to backend/uploads.
+      fileUrl = `/uploads/${req.file.filename}`;
       fileType = req.file.mimetype;
       fileSize = req.file.size;
     } else {
@@ -241,8 +244,9 @@ exports.updateMaterial = async (req, res) => {
       // Delete old file (you'll need to implement this)
       // fs.unlinkSync(path.join(__dirname, '..', material.fileUrl));
 
-      const roleFolder = req.user.role === 'admin' ? 'admin' : 'faculty';
-      material.fileUrl = `/uploads/${roleFolder}/${req.file.filename}`;
+      // const roleFolder = req.user.role === 'admin' ? 'admin' : 'faculty';
+      // uploadLocal stores in root uploads
+      material.fileUrl = `/uploads/${req.file.filename}`;
       material.fileType = req.file.mimetype;
       material.fileSize = req.file.size;
     } else if (req.body.url || req.body.link) {
