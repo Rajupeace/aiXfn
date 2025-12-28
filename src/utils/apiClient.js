@@ -8,32 +8,21 @@ function getAuthHeaders() {
   if (typeof window !== 'undefined' && window.localStorage) {
     const adminToken = window.localStorage.getItem('adminToken');
     const facultyToken = window.localStorage.getItem('facultyToken');
-    const userData = window.localStorage.getItem('userData');
 
-    console.log('[apiClient] Getting auth headers:', {
-      hasAdminToken: !!adminToken,
-      hasFacultyToken: !!facultyToken,
-      hasUserData: !!userData
-    });
+    // Debug: Log token status
+    if (!adminToken && !facultyToken) {
+      console.warn('[apiClient] WARNING: No authentication tokens found in localStorage!');
+      console.warn('[apiClient] Available localStorage keys:', Object.keys(localStorage));
+    }
 
     if (adminToken) {
       headers['x-admin-token'] = adminToken;
-      console.log('[apiClient] Admin token added to headers');
-    } else if (userData) {
-      try {
-        const parsedUserData = JSON.parse(userData);
-        if (parsedUserData.role === 'admin') {
-          console.error('[apiClient] CRITICAL: Admin user detected but adminToken missing from localStorage!');
-          console.error('[apiClient] Please log out and log in again to refresh your session.');
-        }
-      } catch (e) {
-        console.error('[apiClient] Failed to parse userData:', e);
-      }
+      // console.log('[apiClient] Admin token added to headers');
     }
 
     if (facultyToken) {
       headers['x-faculty-token'] = facultyToken;
-      console.log('[apiClient] Faculty token added to headers');
+      // console.log('[apiClient] Faculty token added to headers');
     }
   } else {
     console.error('[apiClient] localStorage is not available');
@@ -55,9 +44,19 @@ export async function apiGet(path) {
 
 export async function apiPost(path, body) {
   if (!API_URL) throw new Error('API_URL not configured');
+
+  const headers = { ...headersJson, ...getAuthHeaders() };
+  const adminToken = window.localStorage.getItem('adminToken');
+  const facultyToken = window.localStorage.getItem('facultyToken');
+
+  // Debug: warn if no token
+  if (!adminToken && !facultyToken) {
+    console.warn('[apiPost] No auth tokens found! Request to', path, 'may fail.');
+  }
+
   const res = await fetch(`${API_URL.replace(/\/$/, '')}${path}`, {
     method: 'POST',
-    headers: { ...headersJson, ...getAuthHeaders() },
+    headers: headers,
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
@@ -144,6 +143,15 @@ export async function adminLogin(adminId, password) {
     if (!res.ok) {
       throw new Error(data.error || `Login failed: ${res.status}`);
     }
+
+    // Auto-save admin token to localStorage (CRITICAL FIX)
+    if (data && data.token) {
+      window.localStorage.setItem('adminToken', data.token);
+      console.log('[apiClient] Admin token auto-saved to localStorage:', data.token.substring(0, 10) + '...');
+    } else {
+      console.warn('[apiClient] WARNING: Admin login response missing token!', data);
+    }
+
     return data;
   } catch (error) {
     console.error('Admin login API error:', error);

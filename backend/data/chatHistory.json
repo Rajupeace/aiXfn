@@ -31,5 +31,47 @@
       "name": "Administrator"
     },
     "timestamp": "2025-12-28T04:08:46.253Z"
+  },
+  {
+    "id": "98a9f56c-d45c-4ac9-9996-c3a3e3d75cb5",
+    "userId": "231FA04434",
+    "role": "student",
+    "message": "HI",
+    "response": "Hello! I see you are a Year 3 student in CSE, Section 11. How can I assist you with your studies today?",
+    "context": {
+      "year": 3,
+      "branch": "CSE",
+      "section": "11",
+      "name": " mary-satvika"
+    },
+    "timestamp": "2025-12-28T04:52:12.325Z"
+  },
+  {
+    "id": "8ef5f2ec-354b-48d4-b1ae-ffd1eb8af7d7",
+    "userId": "231FA04434",
+    "role": "student",
+    "message": "WHAT IS NAME",
+    "response": "I received your query about \"WHAT IS NAME\". While I don't have specific information on this, I recommend:\n1. Checking the 'Advanced Learning' section\n2. Contacting your faculty advisor\n3. Visiting the student help desk\n\nIs there anything else I can help you with?",
+    "context": {
+      "year": 3,
+      "branch": "CSE",
+      "section": "11",
+      "name": " mary-satvika"
+    },
+    "timestamp": "2025-12-28T04:52:29.438Z"
+  },
+  {
+    "id": "52b4cb81-51d5-4b12-9c70-19d452731b13",
+    "userId": "231FA04434",
+    "role": "student",
+    "message": "SHOW METHE SEMESTER SUBJECTS",
+    "response": "I received your query about \"SHOW METHE SEMESTER SUBJECTS\". While I don't have specific information on this, I recommend:\n1. Checking the 'Advanced Learning' section\n2. Contacting your faculty advisor\n3. Visiting the student help desk\n\nIs there anything else I can help you with?",
+    "context": {
+      "year": 3,
+      "branch": "CSE",
+      "section": "11",
+      "name": " mary-satvika"
+    },
+    "timestamp": "2025-12-28T04:52:57.518Z"
   }
 ]
