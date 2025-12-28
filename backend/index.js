@@ -168,20 +168,82 @@ app.use('/api/chat', chatRoutes);
 // requireAuthMongo function removed to isolate server stability issues
 
 app.get('/api/materials', async (req, res, next) => {
-  if (mongoose.connection.readyState === 1) {
-    return materialController.getMaterials(req, res, next);
-  } else {
-    // Fallback to file-based storage
+  try {
     const { year, section, subject, type, course, branch } = req.query;
-    const all = materialsDB.read();
-    let filtered = all;
-    if (year && year !== 'All') filtered = filtered.filter(m => String(m.year) === String(year));
-    if (section && section !== 'All') filtered = filtered.filter(m => String(m.section) === String(section));
-    if (branch && branch !== 'All') filtered = filtered.filter(m => m.branch === branch || !m.branch);
-    if (subject) filtered = filtered.filter(m => String(m.subject) === String(subject));
-    if (type) filtered = filtered.filter(m => String(m.type) === String(type));
-    if (course) filtered = filtered.filter(m => String(m.course) === String(course));
-    return res.json(filtered);
+    let allMaterials = [];
+
+    // 1. Get from MongoDB if connected
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const Material = require('./models/Material');
+        const query = {};
+        if (year && year !== 'All') query.year = year;
+        if (section && section !== 'All') query.section = section;
+        if (subject) query.subject = subject;
+        if (type) query.type = type;
+        if (course) query.course = course;
+
+        const mongoMaterials = await Material.find(query)
+          .populate('course', 'courseCode courseName')
+          .populate('uploadedBy', 'name email')
+          .sort('-createdAt');
+
+        // Transform MongoDB materials
+        const transformed = mongoMaterials.map(m => ({
+          id: m._id.toString(),
+          _id: m._id.toString(),
+          title: m.title,
+          description: m.description,
+          url: m.fileUrl,
+          fileUrl: m.fileUrl,
+          type: m.type,
+          subject: m.subject,
+          year: m.year,
+          section: m.section,
+          module: m.module,
+          unit: m.unit,
+          topic: m.topic,
+          uploadedAt: m.createdAt,
+          createdAt: m.createdAt,
+          uploaderName: m.uploadedBy?.name || 'Administrator',
+          uploaderRole: m.uploadedBy?.facultyId === 'admin' ? 'admin' : 'faculty',
+          source: 'mongodb'
+        }));
+        allMaterials.push(...transformed);
+      } catch (mongoErr) {
+        console.warn('[GET /api/materials] MongoDB error:', mongoErr.message);
+      }
+    }
+
+    // 2. Also get from file-based storage (merge both sources)
+    try {
+      const fileMaterials = materialsDB.read() || [];
+      let filtered = fileMaterials;
+      if (year && year !== 'All') filtered = filtered.filter(m => String(m.year) === String(year));
+      if (section && section !== 'All') filtered = filtered.filter(m => String(m.section) === String(section));
+      if (branch && branch !== 'All') filtered = filtered.filter(m => m.branch === branch || !m.branch);
+      if (subject) filtered = filtered.filter(m => String(m.subject) === String(subject));
+      if (type) filtered = filtered.filter(m => String(m.type) === String(type));
+      if (course) filtered = filtered.filter(m => String(m.course) === String(course));
+
+      // Add source marker and merge
+      const fileWithSource = filtered.map(m => ({ ...m, source: 'file' }));
+
+      // Avoid duplicates (by ID)
+      const existingIds = new Set(allMaterials.map(m => String(m.id)));
+      const uniqueFileMaterials = fileWithSource.filter(m => !existingIds.has(String(m.id)) && !existingIds.has(String(m._id)));
+      allMaterials.push(...uniqueFileMaterials);
+    } catch (fileErr) {
+      console.warn('[GET /api/materials] File read error:', fileErr.message);
+    }
+
+    // Sort by createdAt/uploadedAt descending
+    allMaterials.sort((a, b) => new Date(b.createdAt || b.uploadedAt || 0) - new Date(a.createdAt || a.uploadedAt || 0));
+
+    return res.json(allMaterials);
+  } catch (err) {
+    console.error('[GET /api/materials] Error:', err);
+    return res.status(500).json({ error: 'Failed to fetch materials' });
   }
 });
 // app.get('/api/materials/:id', materialController.getMaterialById);
@@ -284,15 +346,37 @@ const handleFileBasedUpload = (req, res) => {
   }
 };
 
-app.post('/api/materials', /* requireAuthMongo, */ uploadLocal.single('file'), (req, res) => {
+app.post('/api/materials', /* requireAuthMongo, */ uploadLocal.single('file'), async (req, res) => {
   try {
-    if (mongoose.connection.readyState === 1 && typeof materialController !== 'undefined' && materialController.uploadMaterial) {
-      req.user = req.user || authFromHeaders(req);
-      if (!req.user) {
-        return res.status(401).json({ message: 'Authentication failed. Please log in again.' });
-      }
-      return materialController.uploadMaterial(req, res);
+    req.user = req.user || authFromHeaders(req);
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication failed. Please log in again.' });
     }
+
+    console.log('[POST /api/materials] Upload request from:', req.user.role, req.user.id);
+    console.log('[POST /api/materials] Has file:', !!req.file, 'Body keys:', Object.keys(req.body || {}));
+
+    // Try MongoDB first
+    if (mongoose.connection.readyState === 1 && typeof materialController !== 'undefined' && materialController.uploadMaterial) {
+      try {
+        return await new Promise((resolve, reject) => {
+          materialController.uploadMaterial(req, {
+            status: (code) => ({
+              json: (data) => {
+                res.status(code).json(data);
+                resolve();
+              }
+            }),
+            json: (data) => { res.json(data); resolve(); }
+          });
+        });
+      } catch (mongoUploadErr) {
+        console.warn('[POST /api/materials] MongoDB upload failed, falling back:', mongoUploadErr.message);
+        // Fall through to file-based
+      }
+    }
+
+    // Fallback: File-based upload
     return handleFileBasedUpload(req, res);
   } catch (err) {
     console.error('Upload route error:', err);
