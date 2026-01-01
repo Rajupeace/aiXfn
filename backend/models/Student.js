@@ -34,6 +34,9 @@ const studentSchema = new mongoose.Schema({
   phone: String,
   address: String,
   profileImage: String,
+  avatar: String,
+  studentToken: String,
+  tokenIssuedAt: Date,
   createdAt: {
     type: Date,
     default: Date.now

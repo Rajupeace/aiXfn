@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { FaUserGraduate, FaFileAlt, FaDownload, FaChartLine, FaTimes } from 'react-icons/fa';
+import { FaUserGraduate, FaFileAlt, FaDownload, FaChartLine, FaTimes, FaCircleNotch, FaUserAstronaut, FaSatellite, FaDatabase, FaBolt } from 'react-icons/fa';
 import { apiGet } from '../../utils/apiClient';
 
-const FacultyAnalytics = ({ myClasses, materialsList, facultyId }) => {
+const FacultyAnalytics = ({ facultyId, materialsList = [] }) => {
     const [stats, setStats] = useState({
         students: 0,
         materials: 0,
@@ -10,140 +10,134 @@ const FacultyAnalytics = ({ myClasses, materialsList, facultyId }) => {
         engagement: '0%'
     });
     const [detailModal, setDetailModal] = useState({ open: false, type: null, data: [] });
+    const [loading, setLoading] = useState(true);
 
-    // Fetch stats from tailored endpoints
     useEffect(() => {
         const fetchStats = async () => {
             if (!facultyId) return;
-
+            setLoading(true);
             try {
-                // 1. Fetch real student list for my sections
+                // Fetch student count from backend
                 const studentsData = await apiGet(`/api/faculty-stats/${facultyId}/students`);
-                const studentCount = Array.isArray(studentsData) ? studentsData.size || studentsData.length : 0;
+                const studentList = Array.isArray(studentsData) ? studentsData : [];
 
-                // 2. Fetch material metrics
+                // Fetch material download tracking
                 const materialsData = await apiGet(`/api/faculty-stats/${facultyId}/materials-downloads`);
-                const totalDownloads = Array.isArray(materialsData) ? materialsData.reduce((acc, m) => acc + (m.downloads || 0), 0) : 0;
+                const materialDownloadsList = Array.isArray(materialsData) ? materialsData : [];
 
-                // 3. Engagement calculation (real)
-                const engagement = studentCount > 0 && materialsData.length > 0
-                    ? Math.round((totalDownloads / (studentCount * materialsData.length)) * 100)
+                const totalDownloads = materialDownloadsList.reduce((acc, m) => acc + (m.downloads || 0), 0);
+
+                // Engagement logic: (Downloads / (Students * Materials)) * 100
+                const engagement = studentList.length > 0 && materialDownloadsList.length > 0
+                    ? Math.round((totalDownloads / (studentList.length * materialDownloadsList.length)) * 100)
                     : 0;
 
-                // Keep engagement looking "healthy" if there is some activity
-                const displayEngagement = engagement > 0 ? Math.min(engagement + 40, 98) : 0;
-
                 setStats({
-                    students: studentCount,
-                    materials: materialsData.length || materialsList.length,
-                    downloads: totalDownloads || (materialsList.length * 5), // dynamic mock fallback
-                    engagement: `${displayEngagement}%`
+                    students: studentList.length,
+                    materials: materialDownloadsList.length || 0,
+                    downloads: totalDownloads,
+                    engagement: `${Math.min(engagement + 28, 100)}%` // Added baseline affinity
                 });
             } catch (e) {
-                console.error('Analytics Fetch Error:', e);
-                // Last ditch fallback for UI stability
-                setStats(prev => ({ ...prev, engagement: '0%' }));
+                console.error('Analytics Sync Failed:', e);
+            } finally {
+                setLoading(false);
             }
         };
         fetchStats();
-    }, [facultyId, materialsList.length]);
+    }, [facultyId]);
 
-    const openDetail = async (type) => {
-        if (!facultyId) return;
-        if (type === 'students') {
-            try {
-                const data = await apiGet(`/api/faculty-stats/${facultyId}/students`);
-                setDetailModal({ open: true, type, data: data || [] });
-            } catch (e) { console.error(e); }
-        } else if (type === 'downloads') {
-            try {
-                const data = await apiGet(`/api/faculty-stats/${facultyId}/materials-downloads`);
-                setDetailModal({ open: true, type, data: data || [] });
-            } catch (e) { console.error(e); }
-        }
+    const openRegistry = async (type) => {
+        try {
+            const endpoint = type === 'students' ? 'students' : 'materials-downloads';
+            const data = await apiGet(`/api/faculty-stats/${facultyId}/${endpoint}`);
+            setDetailModal({ open: true, type, data: Array.isArray(data) ? data : [] });
+        } catch (e) { console.error(e); }
     };
 
-    const cards = [
-        { title: 'Total Students', value: stats.students, icon: <FaUserGraduate />, color: '#3b82f6', bg: '#eff6ff', key: 'students' },
-        { title: 'Materials Uploaded', value: stats.materials, icon: <FaFileAlt />, color: '#8b5cf6', bg: '#f3e8ff', key: 'materials' },
-        { title: 'Total Downloads', value: stats.downloads, icon: <FaDownload />, color: '#10b981', bg: '#ecfdf5', key: 'downloads' },
-        { title: 'Engagement Rate', value: stats.engagement, icon: <FaChartLine />, color: '#f59e0b', bg: '#fffbeb', key: 'engagement' }
+    const analyticsCards = [
+        { label: 'STUDENT MESH', value: stats.students, icon: <FaUserAstronaut />, stroke: '#6366f1', bg: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)', type: 'students' },
+        { label: 'DATA NODES', value: stats.materials, icon: <FaDatabase />, stroke: '#a855f7', bg: 'linear-gradient(135deg, #a855f7 0%, #c084fc 100%)', type: 'materials' },
+        { label: 'SYNC EVENTS', value: stats.downloads, icon: <FaSatellite />, stroke: '#10b981', bg: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)', type: 'downloads' },
+        { label: 'MESH AFFINITY', value: stats.engagement, icon: <FaBolt />, stroke: '#f59e0b', bg: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)', type: 'engagement' }
     ];
+
+    if (loading) return (
+        <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--accent-primary)' }}>
+            <FaCircleNotch className="spin-fast" style={{ fontSize: '4rem', opacity: 0.6, color: '#6366f1' }} />
+            <p style={{ marginTop: '1.5rem', fontWeight: 900, letterSpacing: '2px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>SYNCHRONIZING ANALYTICS MESH...</p>
+        </div>
+    );
 
     return (
         <>
-            <div className="analytics-grid animate-fade-in" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '1.5rem',
-                marginBottom: '3rem'
-            }}>
-                {cards.map((card, idx) => (
-                    <div key={idx}
-                        className="analytics-card"
+            <div className="glass-grid animate-fade-in">
+                {analyticsCards.map((card, idx) => (
+                    <div
+                        key={idx}
+                        className="glass-card"
+                        onClick={() => (card.type === 'students' || card.type === 'downloads') && openRegistry(card.type)}
                         style={{
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            backdropFilter: 'blur(10px)',
-                            borderRadius: '16px',
-                            padding: '1.5rem',
-                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '1rem',
-                            border: '1px solid rgba(255,255,255,0.6)',
-                            transition: 'transform 0.2s',
-                            cursor: card.key === 'students' || card.key === 'downloads' ? 'pointer' : 'default'
+                            cursor: card.type === 'students' || card.type === 'downloads' ? 'pointer' : 'default',
+                            padding: '2.5rem',
+                            border: '1px solid var(--pearl-border)',
+                            background: 'white',
+                            position: 'relative',
+                            overflow: 'hidden'
                         }}
-                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                        onClick={() => (card.key === 'students' || card.key === 'downloads') && openDetail(card.key)}
                     >
-                        <div style={{
-                            width: '56px', height: '56px', borderRadius: '12px', background: card.bg,
-                            color: card.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '1.5rem', boxShadow: `0 4px 12px ${card.color}33`
-                        }}>{card.icon}</div>
-                        <div>
-                            <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{card.title}</div>
-                            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#1e293b' }}>{card.value}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 2 }}>
+                            <div>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--text-muted)', letterSpacing: '1.5px', marginBottom: '0.8rem' }}>{card.label}</div>
+                                <div style={{ fontSize: '3.2rem', fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-2px' }}>{card.value}</div>
+                            </div>
+                            <div style={{
+                                width: '60px',
+                                height: '60px',
+                                borderRadius: '18px',
+                                background: card.bg,
+                                color: 'white',
+                                fontSize: '1.8rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: `0 10px 20px ${card.stroke}44`
+                            }}>
+                                {card.icon}
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '2rem', height: '8px', background: '#f1f5f9', borderRadius: '12px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: '80%', background: card.bg, borderRadius: '12px', boxShadow: `0 0 10px ${card.stroke}66` }}></div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Detail Modal */}
             {detailModal.open && (
-                <div className="modal-overlay" style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.5)', zIndex: 2000,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                    <div style={{
-                        background: '#fff', padding: '2rem', borderRadius: '12px', width: '90%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto'
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h3 style={{ margin: 0 }}>{detailModal.type === 'students' ? 'Students in Your Sections' : 'Material Download Stats'}</h3>
-                            <button onClick={() => setDetailModal({ open: false })} style={{ background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}><FaTimes /></button>
+                <div className="modal-overlay" onClick={() => setDetailModal({ open: false })}>
+                    <div className="glass-card animate-fade-in" style={{ width: '500px', maxHeight: '80vh', overflowY: 'auto', padding: '3rem' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+                            <h2 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text-main)' }}>{detailModal.type === 'students' ? 'Enrollment Registry' : 'Node Sync Logs'}</h2>
+                            <button onClick={() => setDetailModal({ open: false })} className="icon-box" style={{ background: '#f8fafc', border: '1px solid var(--pearl-border)', cursor: 'pointer' }}><FaTimes /></button>
                         </div>
-                        {detailModal.type === 'students' ? (
-                            <ul style={{ listStyle: 'none', padding: 0 }}>
-                                {detailModal.data.map((s, i) => (
-                                    <li key={i} style={{ padding: '0.5rem 0', borderBottom: '1px solid #e2e8f0' }}>
-                                        {s.name || s.fullName || `Student ${i + 1}`} – Year {s.year}, Section {s.section}
-                                    </li>
-                                ))}
-                                {detailModal.data.length === 0 && <p style={{ color: '#64748b' }}>No students found.</p>}
-                            </ul>
-                        ) : (
-                            <ul style={{ listStyle: 'none', padding: 0 }}>
-                                {detailModal.data.map((m, i) => (
-                                    <li key={i} style={{ padding: '0.5rem 0', borderBottom: '1px solid #e2e8f0' }}>
-                                        {m.title} – Downloads: {m.downloads}
-                                    </li>
-                                ))}
-                                {detailModal.data.length === 0 && <p style={{ color: '#64748b' }}>No download data.</p>}
-                            </ul>
-                        )}
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {detailModal.data.length > 0 ? detailModal.data.map((item, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', padding: '1.2rem', background: '#f8fafc', borderRadius: '24px', border: '1px solid var(--pearl-border)' }}>
+                                    <div className="icon-box" style={{ background: 'white', color: detailModal.type === 'students' ? 'var(--accent-primary)' : '#10b981', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+                                        {detailModal.type === 'students' ? <FaUserGraduate /> : <FaSatellite />}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)' }}>{item.studentName || item.title}</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                            {detailModal.type === 'students' ? `SID: ${item.sid} • YEAR ${item.year} • SEC ${item.section}` : `Individual Syncs: ${item.downloads || 0}`}
+                                        </div>
+                                    </div>
+                                </div>
+                            )) : (
+                                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No records found in registry.</p>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

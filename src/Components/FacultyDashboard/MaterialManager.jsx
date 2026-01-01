@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { apiUpload } from '../../utils/apiClient';
+import React, { useState, useEffect } from 'react';
+import { FaCloudUploadAlt, FaLink, FaHistory, FaFileAlt, FaVideo, FaClipboardList, FaQuestionCircle, FaLayerGroup, FaCalendarAlt, FaPaperPlane, FaEye } from 'react-icons/fa';
+import { apiUpload, apiPost, apiGet } from '../../utils/apiClient';
 
-const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUploadSuccess }) => {
-    // Current active upload type (single selection state)
+const MaterialManager = ({ selectedSubject, selectedSections, onUploadSuccess }) => {
     const [uploadType, setUploadType] = useState('notes');
-
     const [materials, setMaterials] = useState({
         notes: null,
         videos: null,
@@ -15,10 +14,11 @@ const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUp
     });
     const [assignmentDetails, setAssignmentDetails] = useState({ dueDate: '', message: '' });
     const [activeTab, setActiveTab] = useState('upload');
-    // State for Admin/Global resources
     const [globalResources, setGlobalResources] = useState([]);
+    const [broadcastMsg, setBroadcastMsg] = useState('');
+    const [broadcastType, setBroadcastType] = useState('announcement');
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (selectedSubject && selectedSections.length > 0) {
             fetchGlobalResources();
         }
@@ -26,23 +26,17 @@ const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUp
 
     const fetchGlobalResources = async () => {
         if (!selectedSubject) return;
-        const [subject, year] = selectedSubject.split(' - Year ');
+        const parts = selectedSubject.split(' - Year ');
+        const subject = parts[parts.length - 2] || 'General';
+        const year = parts[parts.length - 1] || '1';
 
         try {
-            const res = await fetch(`http://localhost:5000/api/materials?year=${year}&subject=${encodeURIComponent(subject)}`);
-            if (res.ok) {
-                const data = await res.json();
-                const filtered = data.filter(m => {
-                    const matchYear = String(m.year) === String(year);
-                    const matchSubject = m.subject.toLowerCase().includes(subject.toLowerCase()) || subject.toLowerCase().includes(m.subject.toLowerCase());
-                    const matchSection = m.section === 'All' || selectedSections.includes(m.section) || selectedSections.length === 0;
-                    return matchYear && matchSubject && matchSection;
-                });
-                setGlobalResources(filtered);
+            const data = await apiGet(`/api/materials?year=${year}&subject=${encodeURIComponent(subject)}`);
+            if (data) {
+                setGlobalResources(data.filter(m => String(m.year) === String(year)));
             }
         } catch (err) {
             console.error("Error fetching materials:", err);
-            // Fallback skipped for brevity, API preferred
         }
     };
 
@@ -55,32 +49,26 @@ const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUp
 
     const getContext = () => {
         const parts = selectedSubject.split(' - Year ');
-        const subject = parts[0] || 'General';
-        const year = parts[1] || '1';
+        const year = parts[parts.length - 1] || '1';
+        const subject = parts.slice(0, parts.length - 1).join(' - Year ') || 'General';
         return { subject, year };
     };
 
     const handleUpload = async () => {
-        if (!selectedSubject || selectedSections.length === 0) {
-            alert('Please select at least one section in the dashboard above before uploading.');
+        if (selectedSections.length === 0) {
+            alert('Mesh Alert: Select at least one active section target.');
             return;
         }
 
         const { subject, year } = getContext();
-
-        // Only upload the CURRENTLY selected type
         const file = materials[uploadType];
-        if (!file) {
-            alert(`Please select a file for ${uploadType} first.`);
-            return;
-        }
+        if (!file) return alert('Input Required: No data node selected for upload.');
 
-        const module = document.getElementById(`${uploadType}-module`)?.value || '1';
-        const unit = document.getElementById(`${uploadType}-unit`)?.value || '1';
-        const topic = document.getElementById(`${uploadType}-topic`)?.value || '';
+        const module = document.getElementById(`mod-${uploadType}`)?.value || '1';
+        const unit = document.getElementById(`uni-${uploadType}`)?.value || '1';
+        const topic = document.getElementById(`top-${uploadType}`)?.value || '';
 
         try {
-            let successCount = 0;
             for (const section of selectedSections) {
                 const formData = new FormData();
                 formData.append('file', file);
@@ -88,7 +76,7 @@ const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUp
                 formData.append('section', section);
                 formData.append('subject', subject);
                 formData.append('type', uploadType);
-                formData.append('title', file.name); // Default title to filename
+                formData.append('title', file.name);
                 formData.append('module', module);
                 formData.append('unit', unit);
                 if (topic) formData.append('topic', topic);
@@ -97,38 +85,26 @@ const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUp
                     formData.append('dueDate', assignmentDetails.dueDate);
                     formData.append('message', assignmentDetails.message);
                 }
-
                 await apiUpload('/api/materials', formData);
-                successCount++;
             }
-            alert(`✅ Successfully uploaded ${uploadType} to ${successCount} section(s)!\n\nOnly students in section ${selectedSections.join(', ')} will see this material.`);
-
-            // Cleanup
+            alert('✅ Deployment Successful: Content synced to mesh.');
             setMaterials(prev => ({ ...prev, [uploadType]: null }));
-            // Clear file input visually
-            const fileInput = document.getElementById(uploadType);
-            if (fileInput) fileInput.value = '';
-
             if (onUploadSuccess) onUploadSuccess();
             fetchGlobalResources();
-
         } catch (error) {
-            console.error('Upload failed:', error);
-            alert(`Upload failed: ${error.message || 'Server error'}`);
+            alert(`Deployment Failed: ${error.message}`);
         }
     };
 
     const handleLinkAdd = async () => {
-        // ... (reuse existing logic, works fine)
         const title = document.getElementById('link-title').value;
         const url = document.getElementById('link-url').value;
         const type = document.getElementById('link-type').value;
 
-        if (!title || !url) return alert('Title and URL required');
+        if (!title || !url) return alert('Input Required: Title and URL missing.');
         const { subject, year } = getContext();
 
         try {
-            let successCount = 0;
             for (const section of selectedSections) {
                 const formData = new FormData();
                 formData.append('title', title);
@@ -139,185 +115,216 @@ const MaterialManager = ({ selectedSubject, selectedSections, facultyToken, onUp
                 formData.append('link', url);
                 formData.append('module', '1');
                 formData.append('unit', '1');
-                formData.append('topic', 'External Link');
-
+                formData.append('topic', 'Cloud Resource');
                 await apiUpload('/api/materials', formData);
-                successCount++;
             }
-            alert(`✅ Link added to ${successCount} section(s) successfully!`);
+            alert('✅ Cloud Link Synced');
             document.getElementById('link-title').value = '';
             document.getElementById('link-url').value = '';
             if (onUploadSuccess) onUploadSuccess();
             fetchGlobalResources();
         } catch (error) {
-            console.error('Failed to add link:', error);
-            alert('Failed to save link.');
+            alert('Cloud Sync Failed.');
         }
     };
 
-    // Modern Render Helper
-    const renderModernUploadForm = () => {
-        return (
-            <div className="upload-area-modern animate-fade-in">
-                {/* 1. Type Selector */}
-                <div className="upload-type-selector">
-                    {[
-                        { id: 'notes', label: 'Lecture Notes', icon: '📄' },
-                        { id: 'videos', label: 'Video Class', icon: '🎥' },
-                        { id: 'syllabus', label: 'Syllabus', icon: '📋' },
-                        { id: 'assignments', label: 'Assignment', icon: '📝' },
-                        { id: 'modelPapers', label: 'Model Paper', icon: '📑' },
-                        { id: 'importantQuestions', label: 'Important Questions', icon: '❓' }
-                    ].map(type => (
-                        <div
-                            key={type.id}
-                            className={`type-card ${uploadType === type.id ? 'active' : ''}`}
-                            onClick={() => setUploadType(type.id)}
-                        >
-                            <div className="type-icon">{type.icon}</div>
-                            <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#475569' }}>{type.label}</div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* 2. Drop Zone & File Input */}
-                <div className="modern-dropzone" onClick={() => document.getElementById(uploadType).click()}>
-                    <input
-                        type="file"
-                        id={uploadType}
-                        name={uploadType}
-                        onChange={handleFileChange}
-                        accept={uploadType === 'videos' ? 'video/*' : '.pdf,.doc,.docx,.txt'}
-                    />
-                    <div className="drop-icon">
-                        {materials[uploadType] ? '✅' : '☁️'}
-                    </div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#334155' }}>
-                        {materials[uploadType] ? materials[uploadType].name : `Click to Upload ${uploadType.toUpperCase()} File`}
-                    </div>
-                    <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.5rem' }}>
-                        {materials[uploadType] ? 'Ready to publish' : 'Drag and drop or browse'}
-                    </div>
-                </div>
-
-                {/* 3. Metadata Form Grid */}
-                <div className="modern-form-grid">
-                    <div className="form-group">
-                        <label className="input-label" htmlFor={`${uploadType}-module`}>Module</label>
-                        <select id={`${uploadType}-module`} name={`${uploadType}-module`} className="glass-select">
-                            {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>Module {n}</option>)}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label className="input-label" htmlFor={`${uploadType}-unit`}>Unit</label>
-                        <select id={`${uploadType}-unit`} name={`${uploadType}-unit`} className="glass-select">
-                            {[1, 2, 3, 4].map(n => <option key={n} value={n}>Unit {n}</option>)}
-                        </select>
-                    </div>
-                    <div className="form-group full-width">
-                        <label className="input-label" htmlFor={`${uploadType}-topic`}>Topic Name (Optional)</label>
-                        <input id={`${uploadType}-topic`} name={`${uploadType}-topic`} placeholder="e.g. Introduction to Algorithms" className="glass-input" />
-                    </div>
-
-                    {uploadType === 'assignments' && (
-                        <div className="form-group full-width">
-                            <label className="input-label">Instructions & Due Date</label>
-                            <div style={{ display: 'grid', gap: '1rem' }}>
-                                <input type="datetime-local" className="glass-input" value={assignmentDetails.dueDate} onChange={(e) => setAssignmentDetails({ ...assignmentDetails, dueDate: e.target.value })} />
-                                <textarea className="glass-input textarea" placeholder="Instructions..." value={assignmentDetails.message} onChange={(e) => setAssignmentDetails({ ...assignmentDetails, message: e.target.value })} />
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* 4. Action */}
-                <div className="action-footer">
-                    <button type="button" className="btn-primary-glass large" onClick={handleUpload} style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}>
-                        🚀 Publish {uploadType === 'modelPapers' ? 'Model Paper' : uploadType.slice(0, -1)} to {selectedSections.length} Sections
-                    </button>
-                </div>
-            </div >
-        );
-    };
-
     return (
-        <div className="upload-container animate-fade-in">
-            <div className="upload-header">
-                <h2>Manage Content</h2>
-                <div className="material-tabs">
-                    <button type="button" className={`tab-pill ${activeTab === 'upload' ? 'active' : ''}`} onClick={() => setActiveTab('upload')}>
-                        Upload
+        <div className="deployment-hub animate-fade-in">
+            <div className="hub-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+                    <div className="icon-box" style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', color: 'white', width: '48px', height: '48px', fontSize: '1.4rem' }}><FaLayerGroup /></div>
+                    <div>
+                        <h2 style={{ margin: 0 }}>Content Deployment Hub</h2>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 900, letterSpacing: '1px', marginTop: '0.2rem' }}>CENTRAL NODE DISPATCH E-SYSTEM</div>
+                    </div>
+                </div>
+
+                <div className="quantum-tabs">
+                    <button className={`quantum-tab-btn ${activeTab === 'upload' ? 'active' : ''}`} onClick={() => setActiveTab('upload')}>
+                        <FaCloudUploadAlt /> DEPLOYMENT
                     </button>
-                    <button type="button" className={`tab-pill ${activeTab === 'links' ? 'active' : ''}`} onClick={() => setActiveTab('links')}>
-                        Add Links
+                    <button className={`quantum-tab-btn ${activeTab === 'links' ? 'active' : ''}`} onClick={() => setActiveTab('links')}>
+                        <FaLink /> LINKS
                     </button>
-                    <button type="button" className={`tab-pill ${activeTab === 'resources' ? 'active' : ''}`} onClick={() => setActiveTab('resources')}>
-                        History ({globalResources.length})
+                    <button className={`quantum-tab-btn ${activeTab === 'broadcast' ? 'active' : ''}`} onClick={() => setActiveTab('broadcast')}>
+                        <FaPaperPlane /> BROADCAST
+                    </button>
+                    <button className={`quantum-tab-btn ${activeTab === 'resources' ? 'active' : ''}`} onClick={() => setActiveTab('resources')}>
+                        <FaHistory /> REGISTRY
                     </button>
                 </div>
             </div>
 
-            <form id="upload-form" onSubmit={(e) => e.preventDefault()}>
-                {activeTab === 'resources' && (
-                    <div className="glass-table-container">
-                        <table className="glass-table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Type</th>
-                                    <th>Section</th>
-                                    <th>Link</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {globalResources.length === 0 ? (
-                                    <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>No resources found for this selection.</td></tr>
-                                ) : (
-                                    globalResources.map((res, i) => (
-                                        <tr key={i}>
-                                            <td style={{ fontWeight: 500 }}>{res.title}</td>
-                                            <td><span className={`badge-pill small ${res.type}`}>{res.type}</span></td>
-                                            <td>{res.section}</td>
-                                            <td>{res.url ? <a href={res.url} target="_blank" rel="noreferrer" className="link-text">Open</a> : '-'}</td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+            <div className="hub-stage">
+                {activeTab === 'upload' && (
+                    <div className="upload-nexus animate-fade-in">
+                        <div className="type-nexus-grid">
+                            {[
+                                { id: 'notes', label: 'Notes', icon: <FaFileAlt /> },
+                                { id: 'videos', label: 'Video', icon: <FaVideo /> },
+                                { id: 'assignments', label: 'Task', icon: <FaClipboardList /> },
+                                { id: 'modelPapers', label: 'Paper', icon: <FaLayerGroup /> },
+                                { id: 'importantQuestions', label: 'Q&A', icon: <FaQuestionCircle /> }
+                            ].map(t => (
+                                <button key={t.id} className={`nexus-card ${uploadType === t.id ? 'active' : ''}`} onClick={() => setUploadType(t.id)}>
+                                    <div className="nexus-icon">{t.icon}</div>
+                                    <span>{t.label}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="nexus-dropzone" onClick={() => document.getElementById(uploadType).click()} style={{ position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', inset: 0, opacity: 0.03, background: 'var(--accent-primary)', pointerEvents: 'none' }}></div>
+                            <input
+                                type="file"
+                                id={uploadType}
+                                name={uploadType}
+                                style={{ display: 'none' }}
+                                onChange={handleFileChange}
+                                accept={uploadType === 'videos' ? 'video/*' : '.pdf,.doc,.docx,.txt'}
+                            />
+                            <div className="drop-status">
+                                {materials[uploadType] ?
+                                    <div style={{ color: '#10b981', filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.3))' }}><FaCloudUploadAlt /></div> :
+                                    <div style={{ opacity: 0.1, color: 'var(--text-main)' }}><FaCloudUploadAlt /></div>
+                                }
+                            </div>
+                            <h3>{materials[uploadType] ? materials[uploadType].name : `SELECT ${uploadType.toUpperCase()} PAYLOAD`}</h3>
+                            <p style={{ fontWeight: 600, color: 'var(--text-muted)' }}>{materials[uploadType] ? 'NODE DATA VERIFIED' : 'SUPPORTED PROTOCOLS: PDF, DOCX, MP4'}</p>
+                        </div>
+
+                        <div className="nexus-form-grid">
+                            <div className="nexus-group">
+                                <label>Target Module</label>
+                                <select id={`mod-${uploadType}`} className="cyber-input">
+                                    {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>Module {n}</option>)}
+                                </select>
+                            </div>
+                            <div className="nexus-group">
+                                <label>Target Unit</label>
+                                <select id={`uni-${uploadType}`} className="cyber-input">
+                                    {[1, 2, 3, 4].map(n => <option key={n} value={n}>Unit {n}</option>)}
+                                </select>
+                            </div>
+                            <div className="nexus-group full">
+                                <label>Topic Identifier</label>
+                                <input id={`top-${uploadType}`} placeholder="e.g. Distributed Ledger Technology" className="cyber-input" />
+                            </div>
+
+                            {uploadType === 'assignments' && (
+                                <div className="nexus-group full" style={{ marginTop: '1rem', borderTop: '1px solid #f1f5f9', paddingTop: '1rem' }}>
+                                    <label><FaCalendarAlt /> Deadlines & Procedures</label>
+                                    <input type="datetime-local" className="cyber-input" value={assignmentDetails.dueDate} onChange={(e) => setAssignmentDetails({ ...assignmentDetails, dueDate: e.target.value })} style={{ marginBottom: '1rem' }} />
+                                    <textarea className="cyber-input" placeholder="Enter instructional protocols..." rows="3" value={assignmentDetails.message} onChange={(e) => setAssignmentDetails({ ...assignmentDetails, message: e.target.value })} />
+                                </div>
+                            )}
+                        </div>
+
+                        <button className="cyber-btn primary" style={{ width: '100%', marginTop: '2rem', justifyContent: 'center' }} onClick={handleUpload}>
+                            <FaPaperPlane /> Initiate Deployment to {selectedSections.length} Nodes
+                        </button>
                     </div>
                 )}
-
-                {activeTab === 'upload' && renderModernUploadForm()}
-
                 {activeTab === 'links' && (
-                    <div className="glass-panel-light">
-                        <h3 className="panel-title">Add External Resource</h3>
-                        <div className="input-grid">
-                            <div className="form-group full-width">
-                                <label className="input-label" htmlFor="link-title">Resource Title</label>
-                                <input id="link-title" placeholder="e.g. YouTube Playlist - Data Structures" className="glass-input" />
+                    <div className="upload-nexus animate-fade-in" style={{ background: '#f8fafc', padding: '3rem', borderRadius: '32px' }}>
+                        <div className="nexus-form-grid">
+                            <div className="nexus-group full">
+                                <label style={{ color: 'var(--accent-primary)' }}>Resource Label</label>
+                                <input id="link-title" placeholder="e.g. Cloud API Documentation" className="cyber-input" style={{ background: 'white' }} />
                             </div>
-                            <div className="form-group full-width">
-                                <label className="input-label" htmlFor="link-url">URL</label>
-                                <input id="link-url" placeholder="https://" className="glass-input" />
+                            <div className="nexus-group full">
+                                <label style={{ color: 'var(--accent-secondary)' }}>Target Cloud URL</label>
+                                <input id="link-url" placeholder="https://" className="cyber-input" style={{ background: 'white' }} />
                             </div>
-                            <div className="form-group">
-                                <label className="input-label" htmlFor="link-type">Resource Type</label>
-                                <select id="link-type" className="glass-select">
-                                    <option value="videos">Video</option>
-                                    <option value="notes">Notes/Article</option>
-                                    <option value="syllabus">Syllabus</option>
+                            <div className="nexus-group">
+                                <label>Internal Mapping Type</label>
+                                <select id="link-type" className="cyber-input" style={{ background: 'white' }}>
+                                    <option value="videos">Video Stream</option>
+                                    <option value="notes">Data Notes</option>
+                                    <option value="syllabus">Syllabus Node</option>
                                 </select>
                             </div>
                         </div>
-                        <div className="action-footer" style={{ marginTop: '1.5rem' }}>
-                            <button type="button" className="btn-primary-glass large" onClick={handleLinkAdd}>
-                                🔗 Add Link
-                            </button>
+                        <button className="cyber-btn primary" style={{ width: '100%', marginTop: '2.5rem', justifyContent: 'center' }} onClick={handleLinkAdd}>
+                            <FaLink /> Establish Cloud Link
+                        </button>
+                    </div>
+                )}
+                {activeTab === 'broadcast' && (
+                    <div className="upload-nexus animate-fade-in" style={{ background: '#f8fafc', padding: '3rem', borderRadius: '32px' }}>
+                        <div style={{ marginBottom: '2rem' }}>
+                            <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.4rem', fontWeight: 800 }}>Dispatch Section Broadcast</h3>
+                            <p style={{ color: 'var(--text-muted)', margin: '0.4rem 0 0 0' }}>Send urgent notes or updates to all students in {selectedSections.join(', ')}</p>
+                        </div>
+                        <div className="nexus-form-grid">
+                            <div className="nexus-group full">
+                                <label style={{ color: 'var(--accent-primary)' }}>Message Transcript</label>
+                                <textarea
+                                    className="cyber-input"
+                                    rows="5"
+                                    value={broadcastMsg}
+                                    onChange={(e) => setBroadcastMsg(e.target.value)}
+                                    placeholder="Type your message for the students..."
+                                    style={{ background: 'white', border: '1px solid var(--pearl-border)' }}
+                                />
+                            </div>
+                            <div className="nexus-group">
+                                <label style={{ color: 'var(--accent-secondary)' }}>Transmission Type</label>
+                                <select className="cyber-input" value={broadcastType} onChange={(e) => setBroadcastType(e.target.value)} style={{ background: 'white' }}>
+                                    <option value="announcement">Standard Announcement</option>
+                                    <option value="urgent">Urgent Alert</option>
+                                    <option value="reminder">Task Reminder</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button
+                            className="cyber-btn primary"
+                            style={{ width: '100%', marginTop: '2.5rem', justifyContent: 'center', background: 'linear-gradient(135deg, #0ea5e9, #22d3ee)' }}
+                            onClick={async () => {
+                                if (!broadcastMsg) return alert('Protocol Failure: Message empty.');
+                                const { subject, year } = getContext();
+                                try {
+                                    await apiPost('/api/faculty/messages', {
+                                        message: broadcastMsg,
+                                        type: broadcastType,
+                                        year,
+                                        sections: selectedSections,
+                                        subject
+                                    });
+                                    alert('✅ Mesh Transmission Successful');
+                                    setBroadcastMsg('');
+                                } catch (e) {
+                                    alert(`Transmission Interrupted: ${e.message}`);
+                                }
+                            }}
+                        >
+                            <FaPaperPlane /> Initiate Global Broadcast to Students
+                        </button>
+                    </div>
+                )}
+
+                {activeTab === 'resources' && (
+                    <div className="registry- nexus animate-fade-in">
+                        <div className="node-grid">
+                            {globalResources.map((res, i) => (
+                                <div key={i} className="material-node" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <div className="icon-box" style={{ background: '#f8fafc' }}>
+                                        {res.type === 'videos' ? <FaVideo style={{ color: '#10b981' }} /> : <FaFileAlt style={{ color: '#3b82f6' }} />}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>{res.title}</div>
+                                        <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.2rem' }}>
+                                            <span className="status-badge" style={{ background: '#f1f5f9', color: '#64748b', fontSize: '0.6rem' }}>SEC {res.section}</span>
+                                            <span className="status-badge" style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '0.6rem' }}>{res.type}</span>
+                                        </div>
+                                    </div>
+                                    {res.url && <a href={res.url} target="_blank" rel="noreferrer" className="icon-box" style={{ width: '30px', height: '30px', fontSize: '0.8rem' }}><FaEye /></a>}
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
-            </form>
+            </div>
         </div>
     );
 };

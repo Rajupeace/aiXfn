@@ -4,12 +4,72 @@
     "sid": "231FA04434",
     "email": "satvika2812@gmail.com",
     "year": 3,
-    "section": "11",
+    "section": "13",
     "branch": "CSE",
     "password": "reddy@",
     "name": " mary-satvika",
     "studentId": "231FA04434",
     "profilePic": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-    "updatedAt": "2025-12-27T09:04:33.815Z"
+    "updatedAt": "2025-12-27T09:04:33.815Z",
+    "studentToken": "cb3c8683-a0ed-4150-a14e-029bc3a5641f"
+  },
+  {
+    "studentName": "Test Satvika",
+    "sid": "TEST_SATVIKA",
+    "email": "satvika@test.com",
+    "year": "3",
+    "section": "13",
+    "branch": "CSE",
+    "password": "Password123"
+  },
+  {
+    "studentName": "E2E Student",
+    "sid": "studentE2E",
+    "email": "studentE2E@example.com",
+    "year": "1",
+    "section": "A",
+    "branch": "CSE",
+    "password": "password"
+  },
+  {
+    "studentName": "Test Student",
+    "sid": "S12345",
+    "email": "teststudent@example.com",
+    "year": "2",
+    "section": "A",
+    "branch": "CSE",
+    "password": "Password123"
+  },
+  {
+    "studentName": "kiran reddy",
+    "sid": "231fa4455",
+    "email": "kr4138124@gmail.com",
+    "year": "3",
+    "section": "13",
+    "branch": "CSE",
+    "password": "kiran@"
+  },
+  {
+    "studentName": "Jane Doe",
+    "sid": "23VF002",
+    "email": "janedoe@vignan.ac.in",
+    "year": "3",
+    "section": "B",
+    "branch": "IT",
+    "password": "Password123!"
+  },
+  {
+    "id": "bfd2c65e-ab7e-41dd-80b3-5dac473a2504",
+    "studentName": "Test Student",
+    "sid": "test001",
+    "email": "test@vignan.ac.in",
+    "year": "2",
+    "section": "B",
+    "branch": "CSE",
+    "password": "password123",
+    "avatar": "Midnight",
+    "createdAt": "2026-01-01T12:20:26.613Z",
+    "studentToken": "3a711c9c-3159-437a-be68-9e1c6fd94745",
+    "role": "student"
   }
 ]

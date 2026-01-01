@@ -91,10 +91,9 @@ if LLM_PROVIDER in ("openai", "gpt", "gpt4", "gpt-4"):
                 model=MODEL_NAME, 
                 temperature=0.7, 
                 max_tokens=1024,
-                base_url=BASE_URL, # Pass explicit base_url if set, otherwise None (defaults to OpenAI)
-                api_key="your_openai_api_key_here"  # Replace with your OpenAI API key
+                base_url=BASE_URL,
+                api_key=os.getenv("OPENAI_API_KEY") 
             )
-
         except ImportError:
             print("   (Using legacy langchain.chat_models integration)")
             from langchain.chat_models import ChatOpenAI
@@ -102,8 +101,8 @@ if LLM_PROVIDER in ("openai", "gpt", "gpt4", "gpt-4"):
                 model=MODEL_NAME, 
                 temperature=0.7, 
                 max_tokens=1024,
-                openai_api_base=BASE_URL, # Legacy param name
-                openai_api_key="your_openai_api_key_here"  # Replace with your OpenAI API key
+                openai_api_base=BASE_URL,
+                openai_api_key=os.getenv("OPENAI_API_KEY")
             )
             
     except Exception as e:
@@ -155,70 +154,38 @@ elif LLM_PROVIDER in ("sambanova", "samba"):
 
 elif LLM_PROVIDER in ("google", "gemini", "google_gen", "gemini-pro"):
     try:
-        import google.generativeai as genai
-        # Custom Wrapper to bypass LangChain hang issues
-        class GoogleGenAICustom:
-            def __init__(self, model_name, api_key):
-                genai.configure(api_key=api_key)
-                self.model = genai.GenerativeModel(model_name)
-            
-            async def ainvoke(self, messages, **kwargs):
-                # Convert LangChain messages to Gemini format
-                prompt_parts = []
-                system_instruction = ""
-                
-                for msg in messages:
-                    if hasattr(msg, 'type') and msg.type == 'system':
-                        system_instruction += msg.content + "\n"
-                    elif hasattr(msg, 'content'):
-                        # Simplification: Append all history as a single context for robust "generate_content"
-                        # Ideally we use history but for this quick fix we want reliability
-                        role_label = "Student" if hasattr(msg, 'type') and msg.type == 'human' else "AI"
-                        prompt_parts.append(f"{role_label}: {msg.content}")
-                
-                # If context is empty, add a default prompt to prevent invalid args
-                if not prompt_parts:
-                    prompt_parts.append("Student: Hello")
-
-                full_prompt = system_instruction + "\n\n" + "\n".join(prompt_parts) + "\nAI:"
-                
-                # Run in executor to be async compatible
-                loop = asyncio.get_event_loop() 
-                response = await loop.run_in_executor(None, lambda: self.model.generate_content(full_prompt))
-                
-                # Return compatible object
-                return AIMessage(content=response.text)
-
-        MODEL_NAME = os.getenv("GOOGLE_MODEL", "gemini-1.5-flash")
+        from langchain_google_genai import ChatGoogleGenerativeAI
         
-        # Override deprecated/unavailable models
-        if MODEL_NAME in ["gemini-pro", "gemini-1.0-pro"]:
-            print(f"[!] Model '{MODEL_NAME}' might be unstable/deprecated. Switching to 'gemini-1.5-flash' for speed.")
-            MODEL_NAME = "gemini-1.5-flash"
-
+        MODEL_NAME = os.getenv("GOOGLE_MODEL", "gemini-1.5-flash")
         api_key = os.getenv("GOOGLE_API_KEY")
         
         if not api_key:
              print("[!] GOOGLE_API_KEY not set in .env")
         else:
-             print(f"[:] Initializing Custom Google Gemini model (Direct SDK): {MODEL_NAME}")
-             
-             # --- AUTO-HEALING INITIALIZATION LOOP ---
-             try:
-                 # Attempt to instantiate (configure does not validate, but creating model object does usually)
-                 # We will wrap it in a try-catch and if user says "unavailable", we switch.
-                 llm = GoogleGenAICustom(model_name=MODEL_NAME, api_key=api_key)
-                 
-                 # Optional: Add a dummy check if you suspect early failure, but lazily is usually fine for Google SDK
-                 # However, user reported "not available" which likely happened during request.
-                 # This block is static init. The fallback will ALSO be handled in the chat endpoint loop.
-                 
-             except Exception as init_error:
-                 print(f"[X] Init Error for {MODEL_NAME}: {init_error}")
-                 # Fallback
-                 MODEL_NAME = "gemini-1.5-flash"
-                 print(f"[:] Switching to reliable fallback: {MODEL_NAME}")
-                 llm = GoogleGenAICustom(model_name=MODEL_NAME, api_key=api_key)
+             print(f"[:] Initializing Google Gemini via LangChain: {MODEL_NAME}")
+             llm = ChatGoogleGenerativeAI(
+                 model=MODEL_NAME,
+                 google_api_key=api_key,
+                 temperature=0.7,
+                 top_p=0.85,
+                 convert_system_message_to_human=True # Necessary for some Gemini models
+             )
+    except Exception as e:
+        print(f"[!] Google Gemini LangChain initialization failed: {e}")
+        # Custom Wrapper Fallback
+        import google.generativeai as genai
+        class GoogleGenAICustom:
+            def __init__(self, model_name, api_key):
+                genai.configure(api_key=api_key)
+                self.model = genai.GenerativeModel(model_name)
+            async def ainvoke(self, messages, **kwargs):
+                prompt = "\n".join([m.content for m in messages if hasattr(m, 'content')])
+                loop = asyncio.get_event_loop()
+                response = await loop.run_in_executor(None, lambda: self.model.generate_content(prompt))
+                return AIMessage(content=response.text)
+        
+        if os.getenv("GOOGLE_API_KEY"):
+            llm = GoogleGenAICustom(model_name="gemini-1.5-flash", api_key=os.getenv("GOOGLE_API_KEY"))
 
 
     except Exception as e:
@@ -446,12 +413,12 @@ def get_role_prompt(role: str, user_name: str = "User") -> str:
     base_instructions = f"""You are Vu AI, the friendly AI assistant for Vignan University (VFSTR).
 
 **CORE RULES:**
-1. **Multi-Language**: Detect user's language and respond in the SAME language.
+1. **Multi-Language**: Detect user's language and respond in the SAME language (English, Telugu, Hindi, etc.).
 2. **Knowledge Sources (Dual Mode)**: 
    - **University Queries**: For questions about Vignan University (fees, exams, campus, faculty), PRIORITIZE the provided "Knowledge Base" below. If specific university info is missing, THEN say "Check with admin office 🏛️".
    - **Educational & General Queries (Gemini Brain)**: For ALL study-related topics (Coding, Math, Science, History), writing tasks, or general doubts, USE YOUR OWN VAST KNOWLEDGE. Do not restrict yourself. You are an expert tutor.
-3. **Tone**: Friendly, warm, professional. Use emojis occasionally 🎓
-4. **Clear Doubts**: Always explain concepts clearly, ask for clarification if needed, and ensure the user understands.
+3. **Tone**: Warm, encouraging, and highly interactive. Use conversational fillers like "That's a great question!", "I'm happy to help with that!", and emojis 🎓✨.
+4. **Interactive Learning**: Explain concepts using analogies. For example, if explaining 'Variables', compare them to boxes in a cupboard.
 5. **Personalization**: {greeting_context}
 6. **Self-Awareness**: If asked "Who am I?" or similar, identify the user as {user_name} ({role.upper()}).
 7. **Dashboard Knowledge**: You are embedded in the "Friendly Notebook" dashboard.

@@ -128,20 +128,45 @@ router.post('/', async (req, res) => {
 
     try {
         // Destructure the payload sent from VuAiAgent.jsx
-        const { prompt, query, userId, role, context } = req.body;
-        const rawMessage = prompt || query || '';
-        const userMessage = rawMessage.trim();
+        const { userId, prompt, role, context, query } = req.body;
+        const userMessage = prompt || query || '';
+        const rawMessage = userMessage;
+
+        if (!userMessage) return res.status(400).json({ error: 'Please provide a message' });
 
         console.log(`[VuAiAgent] Request from ${role || 'student'} (${userId || 'guest'}): ${rawMessage}`);
 
-        // Get the appropriate knowledge base for the user's role
         const knowledgeBase = getKnowledgeBase(role);
-        console.log(`[VuAiAgent] Using ${role || 'student'} knowledge base`);
+        let reply = '';
 
-        let reply = "";
+        // 1. DYNAMIC INTEGRATION: Try Python VuAI Agent (LangChain + Local Knowledge)
+        try {
+            console.log('[VuAiAgent] Attempting to reach Python Agent on port 8000...');
+            const response = await fetch('http://localhost:8000/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId || 'guest',
+                    message: userMessage,
+                    role: role || 'student',
+                    user_name: context?.name || 'User'
+                }),
+                signal: AbortSignal.timeout(10000) // 10s timeout
+            });
 
-        // 1. Try OpenAI API if Key is present
-        if (process.env.OPENAI_API_KEY) {
+            if (response.ok) {
+                const pythonData = await response.json();
+                if (pythonData && pythonData.response) {
+                    console.log('[VuAiAgent] Success: Response from Python Agent.');
+                    reply = pythonData.response;
+                }
+            }
+        } catch (pythonErr) {
+            console.warn('[VuAiAgent] Python Agent unavailable or timed out. Falling back to Node-native LLM.');
+        }
+
+        // 1.5. Fallback: Try OpenAI or Gemini directly from Node
+        if (!reply && process.env.OPENAI_API_KEY) {
             try {
                 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -190,14 +215,31 @@ router.post('/', async (req, res) => {
 
                 let systemContext = '';
                 if (role === 'admin') {
-                    systemContext = `You are VuAiAgent, a helpful university administrative assistant for an Administrator. Help with system management and oversight.`;
+                    systemContext = `You are VuAiAgent (ADMIN MODE 🔑). 
+                    Your goal is to assist the University Administrator in strategic oversight.
+                    1. Focus on system health, user analytics, and INNOVATION.
+                    2. Suggest tips for managing faculty and students efficiently.
+                    3. Act as a visionary strategic partner.
+                    Tone: Authoritative, strategic, and professional.`;
                 } else if (role === 'faculty') {
-                    systemContext = `You are VuAiAgent, a helpful university assistant for faculty members. Help with teaching and student management.`;
+                    systemContext = `You are VuAiAgent (FACULTY MODE 👨‍🏫). 
+                    Your goal is to assist a Professor/Faculty member.
+                    1. Help with lesson planning, student performance tracking, and material management.
+                    2. Assist in creating quizzes, assignments, and curriculum updates.
+                    3. Act as an efficient teaching assistant.
+                    Tone: Respectful, organized, and academic.`;
                 } else {
-                    systemContext = `You are VuAiAgent, a friendly university assistant for students. Help with studies and schedules for a Year ${context?.year || 'N/A'} student.`;
+                    systemContext = `You are VuAiAgent (STUDENT MODE 🎓). 
+                    Your goal is to assist a Year ${context?.year || 'N/A'} student in ${context?.branch || 'Engineering'}.
+                    1. Be extremely WARM, FRIENDLY, and ENCOURAGING. Use emojis like ✨🎓🚀.
+                    2. Prioritize solving subject doubts (Math, CSE, ECE, AI). Use analogies for complex concepts.
+                    3. Help with homework and navigating course notes.
+                    4. Identify the user as ${context?.name || 'Friend'}. 
+                    Tone: Encouraging, motivating study companion.`;
                 }
 
-                const promptWithContext = `${systemContext}\n\nUser Message: ${userMessage}`;
+                const promptWithContext = `SYSTEM INSTRUCTIONS: ${systemContext}\n\nKNOWLEDGE BASE MATCH: ${findKnowledgeMatch(userMessage, knowledgeBase, context)}\n\nUser Message: ${userMessage}`;
+                console.log('[VuAiAgent] Dispatched to Gemini with role-specific persona:', role);
                 const result = await model.generateContent(promptWithContext);
                 reply = result.response.text();
                 console.log('[VuAiAgent] Response from Google Gemini');

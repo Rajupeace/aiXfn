@@ -8,21 +8,24 @@ function getAuthHeaders() {
   if (typeof window !== 'undefined' && window.localStorage) {
     const adminToken = window.localStorage.getItem('adminToken');
     const facultyToken = window.localStorage.getItem('facultyToken');
+    const studentToken = window.localStorage.getItem('studentToken');
 
     // Debug: Log token status
-    if (!adminToken && !facultyToken) {
+    if (!adminToken && !facultyToken && !studentToken) {
       console.warn('[apiClient] WARNING: No authentication tokens found in localStorage!');
       console.warn('[apiClient] Available localStorage keys:', Object.keys(localStorage));
     }
 
     if (adminToken) {
-      headers['x-admin-token'] = adminToken;
-      // console.log('[apiClient] Admin token added to headers');
+      headers['Authorization'] = `Bearer ${adminToken}`;
     }
 
     if (facultyToken) {
-      headers['x-faculty-token'] = facultyToken;
-      // console.log('[apiClient] Faculty token added to headers');
+      headers['Authorization'] = `Bearer ${facultyToken}`;
+    }
+
+    if (studentToken) {
+      headers['Authorization'] = `Bearer ${studentToken}`;
     }
   } else {
     console.error('[apiClient] localStorage is not available');
@@ -169,6 +172,10 @@ export async function facultyLogin(facultyId, password) {
     if (!res.ok) {
       throw new Error(data.error || `Faculty login failed: ${res.status}`);
     }
+    // Auto-save faculty token
+    if (data && data.token) {
+      window.localStorage.setItem('facultyToken', data.token);
+    }
     return data;
   } catch (error) {
     console.error('Faculty login API error:', error);
@@ -193,5 +200,49 @@ export async function adminLogout() {
   return res.json();
 }
 
-const client = { apiGet, apiPost, apiPut, apiDelete, apiUpload, adminLogin, adminLogout, facultyLogin, facultyLogout };
+export async function studentLogin(sid, password) {
+  if (!API_URL) throw new Error('API_URL not configured');
+  try {
+    const res = await fetch(`${API_URL.replace(/\/$/, '')}/api/students/login`, {
+      method: 'POST', headers: headersJson, body: JSON.stringify({ sid, password })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || `Login failed: ${res.status}`);
+    }
+    // Auto-save student token
+    if (data && data.token) {
+      window.localStorage.setItem('studentToken', data.token);
+      window.localStorage.setItem('userData', JSON.stringify(data.studentData));
+    }
+    return data;
+  } catch (error) {
+    console.error('Student login API error:', error);
+    throw error;
+  }
+}
+
+export async function studentRegister(studentData) {
+  if (!API_URL) throw new Error('API_URL not configured');
+  try {
+    const res = await fetch(`${API_URL.replace(/\/$/, '')}/api/students/register`, {
+      method: 'POST', headers: headersJson, body: JSON.stringify(studentData)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || `Registration failed: ${res.status}`);
+    }
+    // Auto-login after registration
+    if (data && data.token) {
+      window.localStorage.setItem('studentToken', data.token);
+      window.localStorage.setItem('userData', JSON.stringify(data.studentData));
+    }
+    return data;
+  } catch (error) {
+    console.error('Student registration API error:', error);
+    throw error;
+  }
+}
+
+const client = { apiGet, apiPost, apiPut, apiDelete, apiUpload, adminLogin, adminLogout, facultyLogin, facultyLogout, studentLogin, studentRegister };
 export default client;

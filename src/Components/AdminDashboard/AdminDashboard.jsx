@@ -9,6 +9,8 @@ import { readFaculty, readStudents, writeStudents, writeFaculty } from '../../ut
 import api from '../../utils/apiClient';
 import { getYearData } from '../StudentDashboard/branchData';
 import VuAiAgent from '../VuAiAgent/VuAiAgent';
+import SystemTelemetry from './SystemTelemetry';
+import SystemIntelligence from './SystemIntelligence';
 
 
 // Helper for mocked API or local storage check
@@ -38,6 +40,7 @@ export default function AdminDashboard({ setIsAuthenticated, setIsAdmin, setStud
   const [modalType, setModalType] = useState(null); // 'student', 'faculty', 'course', 'material', 'todo', 'message'
   const [editItem, setEditItem] = useState(null);
   const [facultyAssignments, setFacultyAssignments] = useState([]); // For managing multiple teaching assignments
+  const [msgTarget, setMsgTarget] = useState('all'); // Targeted messages state
 
   // Load Initial Data
   useEffect(() => {
@@ -45,6 +48,9 @@ export default function AdminDashboard({ setIsAuthenticated, setIsAdmin, setStud
     // Load ToDos from local storage
     const savedTodos = JSON.parse(localStorage.getItem('adminTodos') || '[]');
     setTodos(savedTodos);
+
+    const interval = setInterval(loadData, 30000); // 30s auto-sync
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
@@ -457,9 +463,12 @@ export default function AdminDashboard({ setIsAuthenticated, setIsAdmin, setStud
         apiFormData.append('uploadedBy', 'admin');
 
         // Check authentication
+        // Check authentication
         const adminToken = localStorage.getItem('adminToken');
         if (!adminToken) {
-          throw new Error('Admin token not found. Please log out and log in again.');
+          alert('Session expired or invalid. Logging out...');
+          handleLogout();
+          return;
         }
 
         console.log('[Material Upload] Sending to API...', {
@@ -718,21 +727,41 @@ export default function AdminDashboard({ setIsAuthenticated, setIsAdmin, setStud
   };
 
   // Messages
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const msg = {
-      id: Date.now(),
-      text: formData.get('message'),
-      target: formData.get('target'), // 'all', 'students', 'faculty'
+    const target = formData.get('target');
+    const message = formData.get('message');
+    const targetYear = formData.get('targetYear');
+    const targetSections = formData.getAll('targetSections');
+
+    const payload = {
+      message,
+      target,
+      type: 'announcement',
       date: new Date().toISOString()
     };
 
-    const newMsgs = [...messages, msg];
-    setMessages(newMsgs);
-    localStorage.setItem('adminMessages', JSON.stringify(newMsgs));
-    alert('Message Sent Successfully');
-    closeModal();
+    if (target === 'students-specific') {
+      payload.targetYear = targetYear;
+      payload.targetSections = targetSections;
+    }
+
+    try {
+      if (USE_API) {
+        await api.apiPost('/api/messages', payload);
+        loadData(); // Refresh list from server
+      } else {
+        const newMsgs = [...messages, { ...payload, id: Date.now() }];
+        setMessages(newMsgs);
+        localStorage.setItem('adminMessages', JSON.stringify(newMsgs));
+      }
+      alert('✅ Transmission Successfully Dispatched');
+      closeModal();
+    } catch (err) {
+      console.error('Message Transmission Failed:', err);
+      alert('Transmission Error: ' + (err.message || 'Unknown error'));
+    }
   };
 
 
@@ -763,6 +792,7 @@ export default function AdminDashboard({ setIsAuthenticated, setIsAdmin, setStud
     setShowModal(false);
     setEditItem(null);
     setModalType(null);
+    setMsgTarget('all');
   };
 
   // Helper to fix broken links by prepending API URL if relative
@@ -869,26 +899,15 @@ export default function AdminDashboard({ setIsAuthenticated, setIsAdmin, setStud
                 <div style={{ position: 'absolute', right: '-20px', bottom: '-40px', fontSize: '10rem', opacity: 0.1 }}><FaRocket /></div>
               </div>
 
-              {/* Campus Pulse - Smart Analytics */}
+              {/* Campus Pulse - System Telemetry */}
               <div className="dashboard-section" style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
-                <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Campus Pulse (AI Analytics)</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                  <div style={{ padding: '1rem', background: '#f0f9ff', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
-                    <h4 style={{ margin: 0, color: '#0369a1' }}>Student Engagement</h4>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#0c4a6e' }}>High</div>
-                    <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', color: '#64748b' }}>{messages.length * 2} interactions today</p>
-                  </div>
-                  <div style={{ padding: '1rem', background: '#fdfce7', borderRadius: '8px', borderLeft: '4px solid #eab308' }}>
-                    <h4 style={{ margin: 0, color: '#a16207' }}>Pending Tasks</h4>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#713f12' }}>{todos.filter(t => !t.completed).length}</div>
-                    <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', color: '#64748b' }}>Across all departments</p>
-                  </div>
-                  <div style={{ padding: '1rem', background: '#f0fdf4', borderRadius: '8px', borderLeft: '4px solid #22c55e' }}>
-                    <h4 style={{ margin: 0, color: '#15803d' }}>System Health</h4>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#14532d' }}>98%</div>
-                    <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', color: '#64748b' }}>All services operational</p>
-                  </div>
-                </div>
+                <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>Core System Telemetry</h3>
+                <SystemTelemetry />
+              </div>
+
+              <div className="dashboard-section" style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>System Intelligence & Insights</h3>
+                <SystemIntelligence />
               </div>
 
               <div className="stat-card">
@@ -1078,31 +1097,43 @@ export default function AdminDashboard({ setIsAuthenticated, setIsAdmin, setStud
                   // 1. Get Dynamic Courses (Admin Added)
                   const dynamicCourses = courses.filter(c =>
                     String(c.year) === String(year) &&
-                    (selectedBranchFilter === 'All' || (c.branch && c.branch.toLowerCase() === selectedBranchFilter.toLowerCase()))
+                    (
+                      selectedBranchFilter === 'All' ||
+                      (c.branch && c.branch.toLowerCase() === selectedBranchFilter.toLowerCase()) ||
+                      (c.branch && c.branch.toLowerCase() === 'all')
+                    )
                   );
 
                   // 2. Get Static Courses (Default Curriculum) - Only if a branch is selected
                   let allCourses = [...dynamicCourses];
 
+                  /* 
+                     Fix: Ensure static courses are merged correctly without duplicates 
+                     and respected properly when viewing specific branches.
+                  */
                   if (selectedBranchFilter !== 'All') {
                     const staticData = getYearData(selectedBranchFilter, String(year));
                     if (staticData && staticData.semesters) {
                       staticData.semesters.forEach(s => {
                         s.subjects.forEach(sub => {
-                          // avoid duplicates if admin added same subject manually (optional check, but for now just list all)
-                          allCourses.push({
-                            ...sub,
-                            year: year,
-                            semester: s.sem,
-                            branch: selectedBranchFilter,
-                            isStatic: true
-                          });
+                          // Check if admin has already added this subject (dynamic override)
+                          const isDynamic = dynamicCourses.some(dc => dc.code === sub.code);
+
+                          if (!isDynamic) {
+                            allCourses.push({
+                              ...sub,
+                              year: year,
+                              semester: s.sem,
+                              branch: selectedBranchFilter,
+                              isStatic: true
+                            });
+                          }
                         });
                       });
                     }
                   } else {
-                    // If All is selected, maybe show a hint or just dynamic?
-                    // Let's keep it clean: Only dynamic
+                    // When 'All' is selected, show only Dynamic courses to keep view clean.
+                    // This is intended behavior for the Admin Overview.
                   }
 
                   if (allCourses.length === 0) return null;
@@ -1331,19 +1362,42 @@ export default function AdminDashboard({ setIsAuthenticated, setIsAdmin, setStud
             <div className="section-container">
               <div className="actions-bar">
                 <button className="btn-primary" onClick={() => openModal('message')}>
-                  <FaEnvelope /> New Message
+                  <FaEnvelope /> New Strategic Message
                 </button>
               </div>
-              <div className="messages-list">
+              <div className="messages-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {messages.map((msg, i) => (
-                  <div key={i} className="message-card">
-                    <div className="msg-header">
-                      <span className="target-badge">To: {msg.target}</span>
-                      <span className="date">{new Date(msg.date).toLocaleDateString()}</span>
+                  <div key={msg.id || i} className="message-card" style={{ background: 'white', padding: '1.5rem', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                        <span className="badge" style={{
+                          background: msg.target === 'all' ? '#10b981' : msg.target === 'faculty' ? '#a855f7' : '#3b82f6',
+                          color: 'white', padding: '0.3rem 0.8rem', borderRadius: '50px', fontSize: '0.75rem', fontWeight: 800
+                        }}>
+                          {msg.target.toUpperCase()}
+                        </span>
+                        {msg.type === 'urgent' && (
+                          <span className="badge" style={{ background: '#f43f5e', color: 'white', fontWeight: 900 }}>URGENT</span>
+                        )}
+                        {msg.targetYear && <span className="badge" style={{ background: '#f1f5f9', color: '#64748b' }}>Year {msg.targetYear}</span>}
+                        {msg.targetSections && msg.targetSections.length > 0 && (
+                          <span className="badge" style={{ background: '#f1f5f9', color: '#64748b' }}>Sec: {msg.targetSections.join(', ')}</span>
+                        )}
+                      </div>
+                      <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{new Date(msg.createdAt || msg.date).toLocaleString()}</span>
                     </div>
-                    <p>{msg.text}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.8rem' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                        <FaEnvelope style={{ fontSize: '0.9rem' }} />
+                      </div>
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1e293b' }}>
+                        {msg.facultyId ? `Prof. ${msg.sender || msg.facultyId}` : 'CENTRAL ADMINISTRATION'}
+                      </div>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.95rem', color: '#334155', lineHeight: '1.6', fontWeight: 500 }}>{msg.message || msg.text}</p>
                   </div>
                 ))}
+                {messages.length === 0 && <p className="empty-state">No active transmissions detected on the network.</p>}
               </div>
             </div>
           )}
@@ -1775,6 +1829,34 @@ export default function AdminDashboard({ setIsAuthenticated, setIsAdmin, setStud
                         </div>
                         <div className="row">
                           <div className="form-group">
+                            <label>Branch</label>
+                            <select name="branch" defaultValue="All">
+                              <option value="All">All Branches</option>
+                              <option value="CSE">CSE</option>
+                              <option value="AIML">AIML</option>
+                              <option value="IT">IT</option>
+                              <option value="ECE">ECE</option>
+                              <option value="EEE">EEE</option>
+                              <option value="MECH">MECH</option>
+                              <option value="CIVIL">CIVIL</option>
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Semester</label>
+                            <select name="semester" defaultValue="1">
+                              <option value="1">Semester 1</option>
+                              <option value="2">Semester 2</option>
+                              <option value="3">Semester 3</option>
+                              <option value="4">Semester 4</option>
+                              <option value="5">Semester 5</option>
+                              <option value="6">Semester 6</option>
+                              <option value="7">Semester 7</option>
+                              <option value="8">Semester 8</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="row">
+                          <div className="form-group">
                             <label>Target Section</label>
                             <select name="section" style={{ width: '100%' }}>
                               <option value="">All Sections</option>
@@ -1833,19 +1915,45 @@ export default function AdminDashboard({ setIsAuthenticated, setIsAdmin, setStud
                       <form onSubmit={handleSendMessage}>
                         <div className="form-group">
                           <label>Target Audience</label>
-                          <select name="target">
-                            <option value="all">Everyone</option>
+                          <select name="target" value={msgTarget} onChange={(e) => setMsgTarget(e.target.value)}>
+                            <option value="all">Everyone (Global)</option>
                             <option value="students">All Students</option>
+                            <option value="students-specific">Specific Students (Year/Section)</option>
                             <option value="faculty">Faculty Only</option>
                           </select>
                         </div>
+
+                        {msgTarget === 'students-specific' && (
+                          <div className="animate-fade-in" style={{ background: '#f8fafc', padding: '1.2rem', borderRadius: '16px', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
+                            <div className="form-group">
+                              <label>Target Year</label>
+                              <select name="targetYear">
+                                <option value="1">Year 1</option>
+                                <option value="2">Year 2</option>
+                                <option value="3">Year 3</option>
+                                <option value="4">Year 4</option>
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label>Target Sections (Ctrl+Click to multi-select)</label>
+                              <select name="targetSections" multiple style={{ height: '100px' }}>
+                                <option value="A">Section A</option>
+                                <option value="B">Section B</option>
+                                <option value="C">Section C</option>
+                                <option value="D">Section D</option>
+                                <option value="E">Section E</option>
+                              </select>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="form-group">
-                          <label>Message</label>
-                          <textarea name="message" required rows="5"></textarea>
+                          <label>Transmission Content</label>
+                          <textarea name="message" required rows="5" placeholder="Type your message here..."></textarea>
                         </div>
                         <div className="modal-actions" style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                           <button type="button" onClick={closeModal} className="btn-secondary">Cancel</button>
-                          <button className="btn-submit">Send Message</button>
+                          <button className="btn-submit">Initiate Transmission</button>
                         </div>
                       </form>
                     )}

@@ -26,7 +26,7 @@ const materialSchema = new mongoose.Schema({
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Faculty',
-    required: true // Or false if Admin uploads
+    required: true
   },
   year: {
     type: String,
@@ -34,20 +34,31 @@ const materialSchema = new mongoose.Schema({
   },
   section: {
     type: String,
-    // required: true // Made optional as some uploads might be wider? No, user wants specific.
     default: 'All'
   },
   subject: {
     type: String,
     required: true
   },
+  branch: {
+    type: String,
+    default: 'All'
+  },
+  semester: {
+    type: String,
+    default: null
+  },
   module: String,
   unit: String,
   topic: String,
   type: {
     type: String,
-    enum: ['notes', 'assignment', 'question_paper', 'syllabus', 'other', 'videos', 'interview'],
+    enum: ['notes', 'assignment', 'assignments', 'question_paper', 'modelPapers', 'importantQuestions', 'syllabus', 'other', 'videos', 'interview'],
     required: true
+  },
+  downloads: {
+    type: Number,
+    default: 0
   },
   createdAt: {
     type: Date,

@@ -3,16 +3,101 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import {
     FaArrowLeft, FaBook, FaVideo, FaUserTie,
-    FaJava, FaPython, FaReact, FaNodeJs, FaHtml5, FaCss3, FaJs, FaDatabase, FaCode, FaAngular, FaPhp, FaLaptopCode
+    FaJava, FaPython, FaReact, FaNodeJs, FaHtml5, FaCss3, FaJs, FaDatabase, FaCode, FaAngular, FaPhp, FaLaptopCode,
+    FaMicrochip, FaWaveSquare, FaSatelliteDish, FaBolt, FaRobot, FaNetworkWired, FaCogs, FaChartLine, FaBuilding, FaFlask
 } from 'react-icons/fa';
-import { SiDjango, SiFlask, SiMongodb, SiCplusplus } from 'react-icons/si';
+import { SiDjango, SiFlask, SiMongodb, SiCplusplus, SiArduino, SiRaspberrypi } from 'react-icons/si';
 import { apiGet } from '../../utils/apiClient';
 import './AdvancedLearning.css';
+
+// Branch-specific Advanced Courses
+const BRANCH_COURSES = {
+    // CSE, AIML, IT - Programming & Software
+    CSE: {
+        title: "Computer Science Engineering",
+        categories: {
+            "Programming Languages": ["Python", "Java", "C", "C++", "JavaScript", "Go", "Rust"],
+            "Web Development & Frameworks": ["HTML/CSS", "React", "Angular", "Vue.js", "Node.js", "Express.js", "Django", "Flask"],
+            "Databases & Backend": ["MongoDB", "MySQL", "PostgreSQL", "Redis", "GraphQL"],
+            "Advanced Topics": ["Machine Learning", "Data Science", "Cloud Computing", "DevOps", "Docker", "Kubernetes", "Cyber Security"]
+        }
+    },
+    AIML: {
+        title: "AI & Machine Learning",
+        categories: {
+            "Programming Languages": ["Python", "R", "Julia", "Java"],
+            "AI/ML Frameworks": ["TensorFlow", "PyTorch", "Keras", "Scikit-Learn", "OpenCV"],
+            "Data Science": ["Pandas", "NumPy", "Matplotlib", "Data Visualization", "Big Data"],
+            "Advanced AI": ["Deep Learning", "Natural Language Processing", "Computer Vision", "Reinforcement Learning", "Generative AI"]
+        }
+    },
+    IT: {
+        title: "Information Technology",
+        categories: {
+            "Programming Languages": ["Python", "Java", "JavaScript", "PHP"],
+            "Web Development": ["HTML/CSS", "React", "Node.js", "WordPress", "REST APIs"],
+            "Databases": ["MySQL", "MongoDB", "SQL Server"],
+            "IT Skills": ["Cloud Computing", "Networking", "Cyber Security", "Linux", "DevOps"]
+        }
+    },
+    // ECE - Electronics & Communication
+    ECE: {
+        title: "Electronics & Communication Engineering",
+        categories: {
+            "Core Electronics": ["Analog Electronics", "Digital Electronics", "Microprocessors", "Microcontrollers", "VLSI Design"],
+            "Communication Systems": ["Signal Processing", "Wireless Communication", "Antenna Design", "Optical Communication", "5G Technology"],
+            "Embedded Systems": ["Arduino", "Raspberry Pi", "ARM Programming", "IoT Development", "RTOS"],
+            "Advanced Topics": ["FPGA Design", "PCB Design", "RF Engineering", "Satellite Communication", "Robotics"]
+        }
+    },
+    // EEE - Electrical Engineering
+    EEE: {
+        title: "Electrical & Electronics Engineering",
+        categories: {
+            "Core Electrical": ["Power Systems", "Electrical Machines", "Control Systems", "Power Electronics"],
+            "Renewable Energy": ["Solar Power Systems", "Wind Energy", "Smart Grid", "Energy Storage"],
+            "Industrial Automation": ["PLC Programming", "SCADA Systems", "Industrial IoT", "Motor Drives"],
+            "Advanced Topics": ["Electric Vehicles", "High Voltage Engineering", "Power Quality", "MATLAB/Simulink"]
+        }
+    },
+    // MECH - Mechanical Engineering
+    MECH: {
+        title: "Mechanical Engineering",
+        categories: {
+            "Design & CAD": ["AutoCAD", "SolidWorks", "CATIA", "Fusion 360", "3D Printing"],
+            "Manufacturing": ["CNC Programming", "Additive Manufacturing", "Lean Manufacturing", "Six Sigma"],
+            "Core Mechanical": ["Thermodynamics", "Fluid Mechanics", "Strength of Materials", "Machine Design"],
+            "Advanced Topics": ["Robotics", "Mechatronics", "ANSYS", "CFD Analysis", "Automotive Engineering"]
+        }
+    },
+    // CIVIL - Civil Engineering
+    CIVIL: {
+        title: "Civil Engineering",
+        categories: {
+            "Design Software": ["AutoCAD Civil 3D", "STAAD Pro", "ETABS", "Revit", "Primavera"],
+            "Structural Engineering": ["RCC Design", "Steel Structures", "Pre-stressed Concrete", "Earthquake Engineering"],
+            "Construction Management": ["Project Management", "Cost Estimation", "Quality Control", "Site Management"],
+            "Advanced Topics": ["Green Building", "BIM", "Geotechnical Engineering", "Transportation Engineering"]
+        }
+    },
+    // Default for other branches
+    DEFAULT: {
+        title: "Advanced Learning",
+        categories: {
+            "Programming Basics": ["Python", "C", "Java"],
+            "Web Technologies": ["HTML/CSS", "JavaScript", "React"],
+            "Data Skills": ["Excel Advanced", "Data Analysis", "SQL"],
+            "Professional Skills": ["Communication", "Presentation", "Project Management", "Leadership"]
+        }
+    }
+};
 
 const AdvancedLearning = () => {
     const navigate = useNavigate();
     const [subjects, setSubjects] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [branchTitle, setBranchTitle] = useState("Advanced Learning Hub");
+    const [categories, setCategories] = useState({});
 
     // Initial Progress State (Mock Data for "New Feature")
     const [progressData, setProgressData] = useState({});
@@ -20,66 +105,34 @@ const AdvancedLearning = () => {
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
-                const materials = await apiGet('/api/materials');
+                // Get student's branch from localStorage
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                const studentBranch = (userData.branch || 'CSE').toUpperCase();
 
-                // Comprehensive list of advanced learning topics
-                const advancedTopics = [
-                    "Python", "Java", "C", "C++",
-                    "JavaScript", "HTML/CSS", "Node.js",
-                    "React", "Angular", "Vue.js",
-                    "Django", "Flask", "Express.js",
-                    "MongoDB", "MySQL", "PostgreSQL",
-                    "PHP", "Ruby", "Go",
-                    "Machine Learning", "Data Science",
-                    "Artificial Intelligence", "Cyber Security",
-                    "Cloud Computing", "DevOps", "Docker", "Kubernetes"
-                ];
+                console.log('[AdvancedLearning] Student branch:', studentBranch);
 
-                // Get unique subjects from materials
-                const materialSubjects = [...new Set(materials.map(m => m.subject))];
+                // Get branch-specific courses
+                const branchData = BRANCH_COURSES[studentBranch] || BRANCH_COURSES.DEFAULT;
+                setBranchTitle(branchData.title);
+                setCategories(branchData.categories);
 
-                // Combine material subjects with advanced topics, remove duplicates
-                const allSubjects = [...new Set([...advancedTopics, ...materialSubjects])];
-
-                // Filter to keep only programming/tech subjects (exclude academic subjects)
-                const academicSubjects = [
-                    'Basic Electrical Engineering', 'Engineering Mathematics',
-                    'Engineering Chemistry', 'Engineering Physics',
-                    'Digital Logic Design', 'Computer Organization & Architecture',
-                    'Operating Systems', 'Database Management Systems',
-                    'Computer Networks', 'Software Engineering'
-                ];
-
-                const finalSubjects = allSubjects.filter(subject =>
-                    !academicSubjects.some(academic => subject.includes(academic))
-                ).sort();
-
-                setSubjects(finalSubjects.length > 0 ? finalSubjects : advancedTopics);
+                // Flatten all courses for the subject list
+                const allCourses = Object.values(branchData.categories).flat();
+                setSubjects(allCourses);
 
                 // Generate random progress for demo
                 const prog = {};
-                (finalSubjects.length > 0 ? finalSubjects : advancedTopics).forEach(s => {
+                allCourses.forEach(s => {
                     prog[s] = Math.floor(Math.random() * 40); // 0-40% started
                 });
                 setProgressData(prog);
 
             } catch (error) {
-                console.error('Failed to fetch subjects:', error);
-                // Comprehensive fallback list
-                const fallback = [
-                    "Python", "Java", "C", "C++",
-                    "JavaScript", "HTML/CSS", "Node.js",
-                    "React", "Angular", "Vue.js",
-                    "Django", "Flask", "Express.js",
-                    "MongoDB", "MySQL", "PHP",
-                    "Machine Learning", "Data Science",
-                    "Artificial Intelligence", "Cloud Computing", "DevOps"
-                ];
-                setSubjects(fallback);
-
-                const prog = {};
-                fallback.forEach(s => prog[s] = Math.floor(Math.random() * 30));
-                setProgressData(prog);
+                console.error('Failed to load advanced learning:', error);
+                // Fallback to CSE courses
+                const fallbackData = BRANCH_COURSES.CSE;
+                setCategories(fallbackData.categories);
+                setSubjects(Object.values(fallbackData.categories).flat());
             } finally {
                 setLoading(false);
             }
@@ -95,6 +148,7 @@ const AdvancedLearning = () => {
     // Helper to get Icon
     const getSubjectIcon = (name) => {
         const n = name.toLowerCase();
+        // Programming Languages
         if (n.includes('java') && !n.includes('script')) return <FaJava />;
         if (n.includes('python')) return <FaPython />;
         if (n.includes('react')) return <FaReact />;
@@ -102,14 +156,49 @@ const AdvancedLearning = () => {
         if (n.includes('html')) return <FaHtml5 />;
         if (n.includes('css')) return <FaCss3 />;
         if (n.includes('javascript') || n.includes('js')) return <FaJs />;
-        if (n.includes('mongo')) return <SiMongodb />; // Using Si icon or Fa if imported
+        if (n.includes('mongo')) return <SiMongodb />;
         if (n.includes('php')) return <FaPhp />;
         if (n.includes('angular')) return <FaAngular />;
-        if (n.includes('c++')) return <SiCplusplus />; // Using Si icon
+        if (n.includes('c++')) return <SiCplusplus />;
         if (n === 'c') return <FaCode />;
         if (n.includes('django')) return <SiDjango />;
         if (n.includes('flask')) return <SiFlask />;
-        if (n.includes('sql') || n.includes('data')) return <FaDatabase />;
+        if (n.includes('sql') || n.includes('database')) return <FaDatabase />;
+
+        // ECE - Electronics
+        if (n.includes('arduino')) return <SiArduino />;
+        if (n.includes('raspberry')) return <SiRaspberrypi />;
+        if (n.includes('microprocessor') || n.includes('microcontroller') || n.includes('vlsi') || n.includes('fpga')) return <FaMicrochip />;
+        if (n.includes('signal') || n.includes('analog') || n.includes('digital')) return <FaWaveSquare />;
+        if (n.includes('communication') || n.includes('antenna') || n.includes('5g') || n.includes('wireless')) return <FaSatelliteDish />;
+        if (n.includes('embedded') || n.includes('iot') || n.includes('arm')) return <FaCogs />;
+        if (n.includes('pcb') || n.includes('rf')) return <FaNetworkWired />;
+
+        // EEE - Electrical
+        if (n.includes('power') || n.includes('electrical') || n.includes('voltage')) return <FaBolt />;
+        if (n.includes('solar') || n.includes('wind') || n.includes('renewable') || n.includes('energy')) return <FaBolt />;
+        if (n.includes('plc') || n.includes('scada') || n.includes('automation')) return <FaCogs />;
+        if (n.includes('motor') || n.includes('machine')) return <FaCogs />;
+
+        // MECH - Mechanical
+        if (n.includes('cad') || n.includes('solidworks') || n.includes('catia') || n.includes('autocad')) return <FaCogs />;
+        if (n.includes('cnc') || n.includes('manufacturing') || n.includes('3d print')) return <FaCogs />;
+        if (n.includes('robot') || n.includes('mechatronics')) return <FaRobot />;
+        if (n.includes('ansys') || n.includes('cfd') || n.includes('simulation')) return <FaChartLine />;
+        if (n.includes('thermo') || n.includes('fluid') || n.includes('heat')) return <FaFlask />;
+
+        // CIVIL - Civil
+        if (n.includes('staad') || n.includes('etabs') || n.includes('revit') || n.includes('bim')) return <FaBuilding />;
+        if (n.includes('structural') || n.includes('rcc') || n.includes('steel')) return <FaBuilding />;
+        if (n.includes('construction') || n.includes('project management')) return <FaBuilding />;
+        if (n.includes('geotechnical') || n.includes('transportation')) return <FaBuilding />;
+
+        // AI/ML
+        if (n.includes('machine learning') || n.includes('deep learning') || n.includes('ai') || n.includes('neural')) return <FaRobot />;
+        if (n.includes('tensorflow') || n.includes('pytorch') || n.includes('keras')) return <FaRobot />;
+        if (n.includes('data') || n.includes('analytics') || n.includes('visualization')) return <FaChartLine />;
+
+        // Default
         return <FaLaptopCode />;
     };
 
@@ -220,23 +309,23 @@ const AdvancedLearning = () => {
                     <FaArrowLeft className="me-2" /> Back
                 </Button>
                 <div className="header-content">
-                    <h1>Advanced Learning Hub</h1>
+                    <h1>{branchTitle} - Advanced Learning</h1>
                     <p className="subtitle">
-                        Master industry-standard skills with our curated, premium course materials.
+                        Master industry-standard skills with our curated, premium course materials tailored for your branch.
                     </p>
                 </div>
             </header>
 
             <main className="main-content">
-                {programmingLanguages.length > 0 && renderSection("Programming Languages", programmingLanguages)}
-                {webTechnologies.length > 0 && renderSection("Web Development & Frameworks", webTechnologies)}
-                {databases.length > 0 && renderSection("Databases & Backend", databases)}
-                {advancedTopics.length > 0 && renderSection("Advanced Topics", advancedTopics)}
+                {/* Render dynamic categories based on student's branch */}
+                {Object.entries(categories).map(([categoryName, courses]) => (
+                    courses.length > 0 && renderSection(categoryName, courses)
+                ))}
 
                 {subjects.length === 0 && !loading && (
                     <div className="empty-state glass-card">
                         <h3>Coming Soon</h3>
-                        <p>We are curating high-quality content for you.</p>
+                        <p>We are curating high-quality content for your branch.</p>
                     </div>
                 )}
             </main>

@@ -1,0 +1,45 @@
+.faculty-pulse-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.f-pulse-card {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1.5rem;
+    border: 1px solid var(--glass-border);
+}
+
+.f-pulse-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.f-pulse-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.f-pulse-val {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.f-pulse-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-top: 0.3rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

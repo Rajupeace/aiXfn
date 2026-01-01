@@ -73,5 +73,211 @@
       "name": " mary-satvika"
     },
     "timestamp": "2025-12-28T04:52:57.518Z"
+  },
+  {
+    "id": "db9dc60e-7f99-4bf2-ada7-0498d1ef9139",
+    "userId": "231FA0001",
+    "role": "student",
+    "message": "hi",
+    "response": "Hello! I see you are a Year 3 student in ECE, Section A. How can I assist you with your studies today?",
+    "context": {
+      "year": "3",
+      "branch": "ECE",
+      "section": "A",
+      "name": "EMLEDUBRO"
+    },
+    "timestamp": "2025-12-28T05:04:03.885Z"
+  },
+  {
+    "id": "18d9d399-eeb7-40f7-8ecc-f91b7b910e9a",
+    "userId": "23104470",
+    "role": "faculty",
+    "message": "hi",
+    "response": "Hello Professor! Welcome to VuAiAgent. I'm here to assist you with student management, material uploads, and administrative tasks. How can I help you today?",
+    "context": {
+      "name": "bobby"
+    },
+    "timestamp": "2025-12-28T05:56:45.640Z"
+  },
+  {
+    "id": "a6b7dd1f-f095-4041-9b3e-49dc9ea4615d",
+    "userId": "TEST_SATVIKA",
+    "role": "student",
+    "message": "Help me with my studies. What materials are available for my software engineering course?",
+    "response": "Lab sessions require your record book and observation notes. Make sure to wear your ID card and follow safety protocols. Lab schedules are in your timetable.",
+    "context": {
+      "year": "3",
+      "branch": "CSE",
+      "section": "13",
+      "name": "Test Satvika"
+    },
+    "timestamp": "2025-12-28T09:08:43.157Z"
+  },
+  {
+    "id": "c450c219-d69b-488a-a13f-64ac2d401062",
+    "userId": "TEST_SATVIKA",
+    "role": "student",
+    "message": "What about the '3rd Year CSE Software Engineering Notes'?",
+    "response": "All study materials are available in the 'Semester Notes' section. You can download PDFs, videos, and other resources organized by subject and module.",
+    "context": {
+      "year": "3",
+      "branch": "CSE",
+      "section": "13",
+      "name": "Test Satvika"
+    },
+    "timestamp": "2025-12-28T09:10:18.067Z"
+  },
+  {
+    "id": "af9237c2-5f75-4561-96de-214e06eec923",
+    "userId": "TEST_SATVIKA",
+    "role": "student",
+    "message": "Can you give me the link for the '3rd Year CSE Software Engineering Notes'?",
+    "response": "All study materials are available in the 'Semester Notes' section. You can download PDFs, videos, and other resources organized by subject and module.",
+    "context": {
+      "year": "3",
+      "branch": "CSE",
+      "section": "13",
+      "name": "Test Satvika"
+    },
+    "timestamp": "2025-12-28T09:11:44.027Z"
+  },
+  {
+    "id": "d7b48162-fbc4-4b51-8e0d-f771341e2eef",
+    "userId": "ReddyFBN@1228",
+    "role": "admin",
+    "message": "Who are you?",
+    "response": "I received your query about \"Who are you?\". For administrative support:\n1. Check the Admin Dashboard documentation\n2. Review system logs in the backend\n3. Contact technical support if needed\n\nWhat else can I help you manage today?",
+    "context": {
+      "name": "Administrator"
+    },
+    "timestamp": "2025-12-28T09:22:32.929Z"
+  },
+  {
+    "id": "5c11b693-347a-428d-af3e-84ed15186eb5",
+    "userId": "studentE2E",
+    "role": "student",
+    "message": "Who are you?",
+    "response": "I received your query about \"Who are you?\". While I don't have specific information on this, I recommend:\n1. Checking the 'Advanced Learning' section\n2. Contacting your faculty advisor\n3. Visiting the student help desk\n\nIs there anything else I can help you with?",
+    "context": {
+      "year": "1",
+      "branch": "CSE",
+      "section": "A",
+      "name": "E2E Student"
+    },
+    "timestamp": "2025-12-28T09:27:00.263Z"
+  },
+  {
+    "id": "8665122a-8adf-4bb9-81d4-b7d3d44d81ea",
+    "userId": "231FA04434",
+    "role": "student",
+    "message": "hi",
+    "response": "Hello! I see you are a Year 3 student in CSE, Section 13. How can I assist you with your studies today?",
+    "context": {
+      "year": 3,
+      "branch": "CSE",
+      "section": "13",
+      "name": " mary-satvika"
+    },
+    "timestamp": "2025-12-31T01:08:09.147Z"
+  },
+  {
+    "id": "f4ef26cb-b73d-4418-8cde-9de6e1130506",
+    "userId": "231FA04434",
+    "role": "student",
+    "message": "what is today date",
+    "response": "I received your query about \"what is today date\". While I don't have specific information on this, I recommend:\n1. Checking the 'Advanced Learning' section\n2. Contacting your faculty advisor\n3. Visiting the student help desk\n\nIs there anything else I can help you with?",
+    "context": {
+      "year": 3,
+      "branch": "CSE",
+      "section": "13",
+      "name": " mary-satvika"
+    },
+    "timestamp": "2025-12-31T01:08:34.422Z"
+  },
+  {
+    "id": "a9a11499-e05b-4c4d-ad77-10690f56f1f0",
+    "userId": "S12345",
+    "role": "student",
+    "message": "What is the syllabus for CSE year 2?",
+    "response": "You can find your complete syllabus in the 'Semester Notes' section. Each subject has detailed module-wise content. Would you like me to guide you to a specific subject?",
+    "context": {
+      "year": "2",
+      "branch": "CSE",
+      "section": "A",
+      "name": "Test Student"
+    },
+    "timestamp": "2025-12-31T01:09:10.450Z"
+  },
+  {
+    "id": "cdeb7595-708b-4a94-9717-d2355db6ddfa",
+    "userId": "ReddyFBN@1228",
+    "role": "admin",
+    "message": "hi",
+    "response": "Hello Administrator! Welcome to VuAiAgent. I'm here to help you manage the entire system, users, and administrative tasks. What can I assist you with today?",
+    "context": {
+      "name": "Administrator"
+    },
+    "timestamp": "2025-12-31T01:28:50.393Z"
+  },
+  {
+    "id": "85da9f74-1df4-4de5-9651-25f1c01dfd1a",
+    "userId": "ReddyFBN@1228",
+    "role": "admin",
+    "message": "what is todays date",
+    "response": "I received your query about \"what is todays date\". For administrative support:\n1. Check the Admin Dashboard documentation\n2. Review system logs in the backend\n3. Contact technical support if needed\n\nWhat else can I help you manage today?",
+    "context": {
+      "name": "Administrator"
+    },
+    "timestamp": "2025-12-31T01:29:05.184Z"
+  },
+  {
+    "id": "5db0e31d-16cb-4acf-9fd6-b53188a323f0",
+    "userId": "231fa4455",
+    "role": "student",
+    "message": "hi",
+    "response": "Hello! I see you are a Year 3 student in CSE, Section 13. How can I assist you with your studies today?",
+    "context": {
+      "year": "3",
+      "branch": "CSE",
+      "section": "13",
+      "name": "kiran reddy"
+    },
+    "timestamp": "2025-12-31T04:14:10.163Z"
+  },
+  {
+    "id": "1dfc7fd5-bf8d-404b-85ec-d0d8868b80a4",
+    "userId": "231FA04434",
+    "role": "student",
+    "message": "hi",
+    "response": "Hello! I see you are a Year 3 student in CSE, Section 13. How can I assist you with your studies today?",
+    "context": {
+      "year": 3,
+      "branch": "CSE",
+      "section": "13",
+      "name": " mary-satvika"
+    },
+    "timestamp": "2026-01-01T12:30:35.515Z"
+  },
+  {
+    "id": "af1b7b38-b5ff-4ba2-b2eb-1145ecea0947",
+    "userId": "guest",
+    "role": "student",
+    "message": "hi",
+    "response": "Hello! I see you are a Year N/A student in Engineering, Section N/A. How can I assist you with your studies today?",
+    "context": {
+      "name": "User"
+    },
+    "timestamp": "2026-01-01T13:34:42.867Z"
+  },
+  {
+    "id": "03570dc7-760e-420b-832e-63d6554e15b7",
+    "userId": "guest",
+    "role": "student",
+    "message": "what is todats date",
+    "response": "I received your query about \"what is todats date\". While I don't have specific information on this, I recommend:\n1. Checking the 'Advanced Learning' section\n2. Contacting your faculty advisor\n3. Visiting the student help desk\n\nIs there anything else I can help you with?",
+    "context": {
+      "name": "User"
+    },
+    "timestamp": "2026-01-01T13:35:04.982Z"
   }
 ]

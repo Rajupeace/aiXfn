@@ -191,15 +191,22 @@ exports.uploadMaterial = async (req, res) => {
       const Message = require('../models/Message');
       const notificationText = `New ${type} added: "${title}" in ${subject} (Year ${year})`;
 
-      await Message.create({
-        text: notificationText,
-        target: 'students',
-        type: 'material-alert',
-        date: new Date()
-      });
-      console.log('[Notification] Created:', notificationText);
+      // Safely check if we can create a notification (MongoDB only here, JSON handled in index.js)
+      if (mongoose.connection.readyState === 1) {
+        await Message.create({
+          message: notificationText,
+          target: 'students-specific',
+          targetYear: year,
+          targetSections: section ? [section] : [],
+          type: 'material-alert',
+          sender: faculty.name || `Prof. ${faculty.facultyId}`,
+          facultyId: faculty.facultyId,
+          createdAt: new Date()
+        });
+        console.log('[Notification] Logic Dispatched to MongoDB Mesh');
+      }
     } catch (e) {
-      console.warn('Failed to create notification', e);
+      console.warn('Pedagogical Notification Deferred:', e.message);
     }
 
     res.status(201).json(material);
@@ -227,7 +234,14 @@ exports.updateMaterial = async (req, res) => {
     }
 
     // Check if the user is the uploader or an admin
-    if (material.uploadedBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    console.log('[Update] Check:', {
+      materialUploader: material.uploadedBy.toString(),
+      requestUserId: req.user._id ? req.user._id.toString() : 'missing',
+      role: req.user.role
+    });
+
+    const isUploader = req.user._id && material.uploadedBy.toString() === req.user._id.toString();
+    if (!isUploader && req.user.role !== 'admin') {
       return res.status(401).json({ message: 'Not authorized to update this material' });
     }
 
@@ -241,11 +255,22 @@ exports.updateMaterial = async (req, res) => {
 
     // Handle file update if new file is uploaded
     if (req.file) {
-      // Delete old file (you'll need to implement this)
-      // fs.unlinkSync(path.join(__dirname, '..', material.fileUrl));
+      // Delete old file if it exists
+      if (material.fileUrl && material.fileUrl.startsWith('/uploads')) {
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          const uploadsDir = path.join(__dirname, '..', 'uploads');
+          const oldFilePath = path.join(uploadsDir, material.fileUrl.replace('/uploads/', ''));
+          if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+            console.log(`[Update] Deleted old file: ${oldFilePath}`);
+          }
+        } catch (err) {
+          console.error('[Update] Failed to delete old file:', err.message);
+        }
+      }
 
-      // const roleFolder = req.user.role === 'admin' ? 'admin' : 'faculty';
-      // uploadLocal stores in root uploads
       material.fileUrl = `/uploads/${req.file.filename}`;
       material.fileType = req.file.mimetype;
       material.fileSize = req.file.size;
@@ -283,14 +308,39 @@ exports.deleteMaterial = async (req, res) => {
     }
 
     // Check if the user is the uploader or an admin
-    if (material.uploadedBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    console.log('[Delete] Check:', {
+      materialUploader: material.uploadedBy.toString(),
+      requestUserId: req.user._id ? req.user._id.toString() : 'missing',
+      role: req.user.role
+    });
+
+    const isUploader = req.user._id && material.uploadedBy.toString() === req.user._id.toString();
+    if (!isUploader && req.user.role !== 'admin') {
       return res.status(401).json({ message: 'Not authorized to delete this material' });
     }
 
-    // Delete the file (you'll need to implement this)
-    // fs.unlinkSync(path.join(__dirname, '..', material.fileUrl));
+    // Delete the file from physical storage
+    if (material.fileUrl && material.fileUrl.startsWith('/uploads')) {
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const uploadsDir = path.join(__dirname, '..', 'uploads');
+        // Get relative path by removing /uploads/ prefix
+        const relativePath = material.fileUrl.replace('/uploads/', '');
+        const filePath = path.join(uploadsDir, relativePath);
 
-    await material.remove();
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`[Delete] Physically removed file: ${filePath}`);
+        } else {
+          console.warn(`[Delete] File not found on disk: ${filePath}`);
+        }
+      } catch (err) {
+        console.error(`[Delete] File removal error: ${err.message}`);
+      }
+    }
+
+    await material.deleteOne();
 
     res.json({ message: 'Material removed' });
   } catch (error) {

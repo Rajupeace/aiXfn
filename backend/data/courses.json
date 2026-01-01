@@ -1,7 +1,7 @@
 [
   {
     "id": "76f1642c-1ca0-4f81-9bba-ba8c7323e59e",
-    "name": "software engineer ",
+    "name": "Software Engineering",
     "code": "22CS307",
     "year": "3",
     "semester": "6",
@@ -11,14 +11,25 @@
     "createdAt": "2025-12-22T12:15:57.777Z"
   },
   {
-    "id": "0abca830-636b-4348-9521-fa1d392f57b2",
-    "name": "computer networks ",
-    "code": "cs203",
-    "year": "3",
-    "semester": "5",
+    "id": "101",
+    "name": "Data Structures",
+    "code": "CS201",
+    "year": "2",
+    "semester": "3",
     "branch": "CSE",
-    "description": "",
+    "description": "Fundamental data structures",
+    "credits": 4,
+    "createdAt": "2025-12-26T10:00:00.000Z"
+  },
+  {
+    "id": "102",
+    "name": "Database Management Systems",
+    "code": "CS202",
+    "year": "2",
+    "semester": "4",
+    "branch": "CSE",
+    "description": "Introduction to SQL and NoSQL",
     "credits": 3,
-    "createdAt": "2025-12-25T05:29:00.785Z"
+    "createdAt": "2025-12-26T10:05:00.000Z"
   }
 ]

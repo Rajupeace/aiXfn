@@ -5,6 +5,7 @@ import { FaSignOutAlt, FaDownload, FaCog, FaUserEdit, FaClipboardList, FaEnvelop
 import PasswordSettings from '../Settings/PasswordSettings';
 // import { getYearData } from './branchData';
 import VuAiAgent from '../VuAiAgent/VuAiAgent';
+import AcademicPulse from './AcademicPulse';
 import './StudentDashboard.css';
 
 
@@ -64,8 +65,8 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
 
         const fetchData = async () => {
             try {
-                // Fetch Courses
-                const courseData = await apiGet('/api/courses');
+                // Fetch Student Courses
+                const courseData = await apiGet(`/api/students/${data.sid}/courses`);
                 if (mounted && Array.isArray(courseData)) {
                     setExtraCourses(prev => JSON.stringify(prev) !== JSON.stringify(courseData) ? courseData : prev);
                 }
@@ -117,118 +118,9 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
 
 
     const yearData = useMemo(() => {
-        // 1. Start with Empty Structure (No Static Data)
-        const baseData = { semesters: [] };
+        const semesters = [];
 
-        // 2. Clone to avoid mutating (trivial here but keeps structure)
-        const semesters = baseData.semesters.map(s => ({ ...s }));
-
-        // 3. Inject Dynamic Materials into the Hierarchy
-        // This ensures new Modules/Units created by Admin uploads appear in navigation
-        serverMaterials.forEach(m => {
-            // Filter by Year (if specific) - Loose match
-            if (m.year && String(m.year) !== 'All' && String(m.year) !== String(selectedYear)) return;
-
-            // Find Semester? Admin uploads often don't have semester, only Subject.
-            // We search ALL subjects in current year view.
-            semesters.forEach(sem => {
-                // Improved Matching Logic:
-                // 1. Exact Name/Id/Code match
-                // 2. Case-insensitive Name/Code match
-                // 3. Partial Included match (e.g. 'Math' matches 'Engineering Mathematics') - ONLY if Year matches (which is already filtered above)
-                const subject = sem.subjects.find(s => {
-                    const uplSub = (m.subject || '').toLowerCase().trim();
-                    const sName = (s.name || '').toLowerCase();
-                    const sCode = (s.code || '').toLowerCase();
-                    const sId = (s.id || '').toLowerCase();
-
-                    // Check strict/partial matches
-                    if (sName === uplSub || sCode === uplSub || sId === uplSub ||
-                        sName.includes(uplSub) || uplSub.includes(sName)) return true;
-
-                    // Check Aliases
-                    // 1. If upload is 'cn', does sName match 'computer networks'?
-                    if (SUBJECT_ALIASES[uplSub]) {
-                        if (SUBJECT_ALIASES[uplSub].some(alias => sName.includes(alias))) return true;
-                    }
-                    // 2. If subject id is 'cn', does upload match 'computer networks'?
-                    // Extract ID base if needed, but usually 'id' is simple like 'cn' or 'dld'
-                    if (SUBJECT_ALIASES[sId]) {
-                        if (SUBJECT_ALIASES[sId].some(alias => uplSub.includes(alias))) return true;
-                    }
-
-                    // Special manual overrides if map fails
-                    if ((uplSub === 'c' && sName.includes('programming')) ||
-                        (uplSub === 'java' && sName.includes('java'))) return true;
-
-                    return false;
-                });
-
-                if (subject) {
-                    // 3a. Ensure Module Exists
-                    // Admin format: "1" or "Module 1"
-                    const modName = String(m.module || 'General'); // "1"
-                    let module = subject.modules.find(mod =>
-                        mod.name === modName ||
-                        mod.name === `Module ${modName}` ||
-                        (mod.id && mod.id.endsWith(`-m${modName}`))
-                    );
-
-                    if (!module) {
-                        module = {
-                            id: `${subject.id}-m${modName.replace(/\s+/g, '')}`,
-                            name: modName.startsWith('Module') ? modName : `Module ${modName}`,
-                            units: []
-                        };
-                        subject.modules.push(module);
-                        // Sort modules logic could go here, but append is fine for new ones
-                    }
-
-                    // 3b. Ensure Unit Exists
-                    const unitName = String(m.unit || 'General');
-                    let unit = module.units.find(u =>
-                        u.name === unitName ||
-                        u.name === `Unit ${unitName}` ||
-                        (u.id && u.id.endsWith(`-u${unitName}`))
-                    );
-
-                    if (!unit) {
-                        unit = {
-                            id: `${module.id}-u${unitName.replace(/\s+/g, '')}`,
-                            name: unitName.startsWith('Unit') ? unitName : `Unit ${unitName}`,
-                            topics: []
-                        };
-                        module.units.push(unit);
-                    }
-
-                    // 3c. Ensure Topic Exists (Optional, mostly for "General Topics")
-                    // If topic is specified and doesn't match existing, we add a topic node?
-                    // Currently StudentDashboard mostly aggregates at Unit level or shows "General Topics".
-                    // But if we want specific topics to be navigable, we add them.
-                    // For now, let's ensure at least ONE topic exists in the unit.
-                    if (unit.topics.length === 0) {
-                        unit.topics.push({
-                            id: `${unit.id}-t1`,
-                            name: 'General Topics'
-                        });
-                    }
-                    // If material has a specific topic not in list?
-                    if (m.topic && m.topic !== 'General Topics') {
-                        const topicExists = unit.topics.find(t => t.name === m.topic);
-                        if (!topicExists) {
-                            unit.topics.push({
-                                id: `${unit.id}-t-${Date.now()}`, // unique enough
-                                name: m.topic
-                            });
-                        }
-                    }
-                }
-            });
-        });
-
-        // 4. Merge extra courses (Dynamic Courses from Admin)
-        console.log('Extra courses to merge:', extraCourses);
-        console.log('Current Student Context:', { branch, selectedYear });
+        // 1. First, populate semesters and subjects from formal Courses (extraCourses)
         extraCourses.forEach(course => {
             try {
                 const cBranch = (course.branch || 'Common').toLowerCase();
@@ -239,25 +131,92 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
 
                     let sem = semesters.find(s => s.sem === Number(course.semester));
                     if (!sem) {
-                        // Create semester if missing
                         sem = { sem: Number(course.semester), subjects: [] };
                         semesters.push(sem);
-                        // Sort semesters
                         semesters.sort((a, b) => a.sem - b.sem);
                     }
 
-                    // Add course if not exists
-                    if (!sem.subjects.find(s => s.code === course.code)) {
+                    if (!sem.subjects.find(s => s.code === course.code || s.name === course.name)) {
                         sem.subjects.push({
                             id: course.id || `dyn-${course.code}`,
                             name: course.name,
                             code: course.code,
-                            modules: course.modules && course.modules.length > 0 ? course.modules : generateDefaultModules(course.id || course.code)
+                            modules: course.modules && course.modules.length > 0 ? [...course.modules] : generateDefaultModules(course.id || course.code)
                         });
                     }
                 }
             } catch (e) {
                 console.error("Error merging course", e);
+            }
+        });
+
+        // 2. Then, inject serverMaterials into these subjects, or create new "Shadow Subjects" if they don't exist
+        serverMaterials.forEach(m => {
+            if (m.year && String(m.year) !== 'All' && String(m.year) !== String(selectedYear)) return;
+
+            // Target branch check (usually already filtered by server, but double check)
+            if (m.branch && m.branch !== 'All' && m.branch !== branch) return;
+
+            const uplSub = (m.subject || '').toLowerCase().trim();
+            let targetSubject = null;
+
+            // Search for existing subject
+            for (const sem of semesters) {
+                targetSubject = sem.subjects.find(s => {
+                    const sName = (s.name || '').toLowerCase();
+                    const sCode = (s.code || '').toLowerCase();
+                    const sId = (s.id || '').toLowerCase();
+                    return (sName === uplSub || sCode === uplSub || sId === uplSub || sName.includes(uplSub) || uplSub.includes(sName));
+                });
+                if (targetSubject) break;
+            }
+
+            // If subject not found, create a "Shadow Subject" in the specified semester (or Semester 1 by default)
+            if (!targetSubject) {
+                const targetSemNum = Number(m.semester) || 1;
+                let sem = semesters.find(s => s.sem === targetSemNum);
+                if (!sem) {
+                    sem = { sem: targetSemNum, subjects: [] };
+                    semesters.push(sem);
+                    semesters.sort((a, b) => a.sem - b.sem);
+                }
+                targetSubject = {
+                    id: `shadow-${uplSub}`,
+                    name: m.subject || 'Untitled Subject',
+                    code: uplSub.toUpperCase(),
+                    modules: generateDefaultModules(`shadow-${uplSub}`)
+                };
+                sem.subjects.push(targetSubject);
+            }
+
+            // Inject Module/Unit content
+            if (targetSubject) {
+                const modName = String(m.module || '1');
+                let module = targetSubject.modules.find(mod => mod.name === modName || mod.name === `Module ${modName}`);
+
+                if (!module) {
+                    module = { id: `${targetSubject.id}-m${modName}`, name: `Module ${modName}`, units: [] };
+                    targetSubject.modules.push(module);
+                }
+
+                const unitName = String(m.unit || '1');
+                let unit = module.units.find(u => u.name === unitName || u.name === `Unit ${unitName}`);
+
+                if (!unit) {
+                    unit = { id: `${module.id}-u${unitName}`, name: `Unit ${unitName}`, topics: [] };
+                    module.units.push(unit);
+                }
+
+                // Ensure at least one topic exists
+                if (unit.topics.length === 0) {
+                    unit.topics.push({ id: `${unit.id}-t1`, name: 'General Topics' });
+                }
+
+                if (m.topic && m.topic !== 'General Topics') {
+                    if (!unit.topics.find(t => t.name === m.topic)) {
+                        unit.topics.push({ id: `${unit.id}-t-${Date.now()}`, name: m.topic });
+                    }
+                }
             }
         });
 
@@ -268,12 +227,16 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
     // If student has an explicit semester, show only that semester; otherwise allow both semesters of the year
 
 
-    // Fetch server-provided materials (optional) for selected year/branch
+    // Fetch server-provided materials (optional) for selected year/branch/section
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
-                const qs = new URLSearchParams({ year: String(selectedYear), branch });
+                const qs = new URLSearchParams({
+                    year: String(selectedYear),
+                    branch: branch,
+                    section: userData.section || 'All'
+                });
                 const materialsData = await apiGet(`/api/materials?${qs.toString()}`);
                 if (mounted && Array.isArray(materialsData)) {
                     setServerMaterials(materialsData);
@@ -283,44 +246,56 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
             }
         })();
         return () => { mounted = false; };
-    }, [branch, selectedYear]);
+    }, [branch, selectedYear, userData.section]);
 
-    // Fetch Messages (Simulated from Admin LocalStorage + Faculty Broadcasts)
+    // Fetch Messages from API
     useEffect(() => {
-        const storedMsgs = JSON.parse(localStorage.getItem('adminMessages') || '[]');
+        let mounted = true;
+        const fetchMessages = async () => {
+            try {
+                const allMsgs = await apiGet('/api/messages');
+                if (!mounted || !Array.isArray(allMsgs)) return;
 
-        // Filter messages:
-        // 1. target='all' OR target='students'
-        // 2. target='students-specific' AND matches year AND matches section
-        const relevantMsgs = storedMsgs.filter(m => {
-            if (m.target === 'all' || m.target === 'students') return true;
-            if (m.target === 'students-specific') {
-                // Check Year
-                if (String(m.targetYear) !== String(userData.year)) return false;
-                // Check Section (if message has targetSections array, check if my section is in it)
-                if (m.targetSections && Array.isArray(m.targetSections)) {
-                    return m.targetSections.includes(userData.section);
-                }
-                return false;
+                // Filter logic for student:
+                // 1. target='all'
+                // 2. target='students' (Admin)
+                // 3. target='students' (Faculty) AND match year/section
+                const filtered = allMsgs.filter(m => {
+                    // 1. Global / All Students
+                    if (m.target === 'all' || m.target === 'students') {
+                        // If it's a faculty message, check year/section targeting
+                        if (m.facultyId) {
+                            const matchYear = !m.year || String(m.year) === String(userData.year);
+                            const matchSec = !m.sections || m.sections.length === 0 || (Array.isArray(m.sections) && m.sections.includes(userData.section));
+                            return matchYear && matchSec;
+                        }
+                        return true;
+                    }
+
+                    // 2. Admin Targeted (students-specific)
+                    if (m.target === 'students-specific') {
+                        const matchYear = String(m.targetYear) === String(userData.year);
+                        const matchSec = m.targetSections && m.targetSections.includes(userData.section);
+                        return matchYear && matchSec;
+                    }
+
+                    return false;
+                });
+
+                setMessages(filtered);
+
+                const lastReadCount = parseInt(localStorage.getItem('lastReadMsgCount') || '0', 10);
+                const unread = Math.max(0, filtered.length - lastReadCount);
+                setUnreadCount(unread);
+            } catch (err) {
+                console.error("Message sync failed", err);
             }
-            return false;
-        });
+        };
 
-        // Sort by newest first
-        relevantMsgs.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setMessages(relevantMsgs);
-
-        // Calculate unread count based on last viewed count
-        const lastReadCount = parseInt(localStorage.getItem('lastReadMsgCount') || '0', 10);
-        // This is a list_dir, not replace.
-        // Skipping replace. for now to verify render. If decreased (deleted), show 0 or adjust?
-        // Simple logic: Unread = Total - LastRead. If Total < LastRead (deleted), reset LastRead?
-        // Let's just do: Unread = Math.max(0, relevantMsgs.length - lastReadCount);
-        // But better: Store timestamp of last read? No, user wants number logic.
-        // "Show default notification number" usually means show NEW messages.
-        const unread = Math.max(0, relevantMsgs.length - lastReadCount);
-        setUnreadCount(unread);
-    }, [userData.year, userData.section, showMsgModal]); // Add showMsgModal dep to re-calc if needed, though handleOpen does it.
+        fetchMessages();
+        const interval = setInterval(fetchMessages, 30000); // 30s polling
+        return () => { mounted = false; clearInterval(interval); };
+    }, [userData.year, userData.section, showMsgModal]);
 
     // Merge generated subject materials with server-provided ones
 
@@ -410,6 +385,9 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
                             <div className="card-icon">📖</div>
                             <h3>Semester {sem.sem}</h3>
                             <p>{(sem.subjects || []).length} Subjects</p>
+                            <div className="card-progress-mini">
+                                <div className="cp-fill" style={{ width: '45%', background: '#6366f1' }}></div>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -425,6 +403,9 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
                             <div className="card-icon">📘</div>
                             <h3>{sub.name}</h3>
                             <p>{sub.code}</p>
+                            <div className="card-progress-mini">
+                                <div className="cp-fill" style={{ width: `${Math.floor(Math.random() * 60 + 20)}%`, background: '#10b981' }}></div>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -439,7 +420,7 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
                         <div key={mod.id} className="nav-item module-item" onClick={() => handleNavigateTo(mod, 'module', mod.units)}>
                             <div className="item-icon">📦</div>
                             <div className="item-details">
-                                h3&gt;{mod.name}&lt;/h3
+                                <h3>{mod.name}</h3>
                                 <span>{(mod.units || []).length} Units</span>
                             </div>
                             <div className="item-arrow">➔</div>
@@ -773,16 +754,27 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
                                 <div className="msg-list">
                                     {messages.length > 0 ? (
                                         messages.map((m, i) => (
-                                            <div key={i} className="msg-item">
-                                                <div className="msg-date">
-                                                    {new Date(m.date).toLocaleDateString()}
-                                                    {m.sender && <span style={{ marginLeft: '0.5rem', fontWeight: 'bold', color: '#3b82f6' }}>• {m.sender}</span>}
+                                            <div key={i} className="msg-item" style={{ borderLeft: m.type === 'urgent' ? '4px solid #f43f5e' : m.type === 'reminder' ? '4px solid #f59e0b' : '4px solid #3b82f6' }}>
+                                                <div className="msg-date" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span>{new Date(m.createdAt || m.date).toLocaleDateString()}</span>
+                                                    {m.type && <span style={{
+                                                        fontSize: '0.6rem',
+                                                        fontWeight: 900,
+                                                        textTransform: 'uppercase',
+                                                        background: m.type === 'urgent' ? 'rgba(244,63,94,0.1)' : m.type === 'reminder' ? 'rgba(245,158,11,0.1)' : 'rgba(59,130,246,0.1)',
+                                                        color: m.type === 'urgent' ? '#f43f5e' : m.type === 'reminder' ? '#f59e0b' : '#3b82f6',
+                                                        padding: '2px 6px',
+                                                        borderRadius: '4px'
+                                                    }}>{m.type}</span>}
                                                 </div>
-                                                <div className="msg-text">{m.text}</div>
+                                                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#334155', margin: '0.3rem 0' }}>
+                                                    {m.sender || 'ADMIN CENTER'} {m.subject ? `• ${m.subject}` : ''}
+                                                </div>
+                                                <div className="msg-text">{m.message || m.text}</div>
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="msg-empty">No messages</div>
+                                        <div className="msg-empty">No transmissions detected</div>
                                     )}
                                 </div>
                             </div>
@@ -831,6 +823,8 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
                                 }}>
                                     {userData.profilePic ? (
                                         <img src={userData.profilePic} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : userData.avatar ? (
+                                        <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${userData.avatar}`} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     ) : (
                                         <div style={{ width: '100%', height: '100%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>
                                             {(userData.studentName || 'SD').substring(0, 2).toUpperCase()}
@@ -844,7 +838,31 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
                             </div>
 
                             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.2rem' }}>{userData.studentName}</h2>
-                            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>ID: {userData.sid} • {userData.branch}</p>
+                            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>ID: {userData.sid} • Year {userData.year} • {userData.branch}</p>
+
+                            <div className="quick-actions-grid" style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(2, 1fr)',
+                                gap: '0.8rem',
+                                marginBottom: '1.5rem'
+                            }}>
+                                <div className="q-action-item" style={{ background: '#f8fafc', padding: '0.8rem', borderRadius: '12px', border: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => alert('Launching Class Schedule...')}>
+                                    <div style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>📅</div>
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b' }}>SCHEDULE</div>
+                                </div>
+                                <div className="q-action-item" style={{ background: '#f8fafc', padding: '0.8rem', borderRadius: '12px', border: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => alert('Connecting to Faculty Hub...')}>
+                                    <div style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>👨‍🏫</div>
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b' }}>FACULTY</div>
+                                </div>
+                                <div className="q-action-item" style={{ background: '#f8fafc', padding: '0.8rem', borderRadius: '12px', border: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => alert('Opening Virtual Labs...')}>
+                                    <div style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>🔬</div>
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b' }}>LABS</div>
+                                </div>
+                                <div className="q-action-item" style={{ background: '#f8fafc', padding: '0.8rem', borderRadius: '12px', border: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={() => setView('settings')}>
+                                    <div style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>⚙️</div>
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b' }}>SETTINGS</div>
+                                </div>
+                            </div>
 
                             <div className="stats-row" style={{ display: 'flex', justifyContent: 'center', gap: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
                                 <div>
@@ -863,6 +881,13 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
                         </div>
 
                         {/* Recent Activity / Announcements Widget */}
+                        <AcademicPulse
+                            attendance={85}
+                            completedTasks={tasks.length}
+                            totalTasks={tasks.length + 3}
+                            streak={messages.length + 2}
+                        />
+
                         <div className="glass-panel" style={{ padding: '1.5rem' }}>
                             <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <span style={{ background: '#fef3c7', padding: '4px', borderRadius: '4px' }}>🔔</span> Announcements
@@ -882,13 +907,13 @@ export default function StudentDashboard({ studentData = FALLBACK, onLogout }) {
                     {/* Right Column: Main Navigation Cards */}
                     <div className="sd-right-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', alignContent: 'start' }}>
 
-                        <div className="section-card" onClick={() => setView('semester')}>
+                        <div className="section-card" onClick={() => { console.log('Navigating to Semester View'); setView('semester'); }}>
                             <div className="section-icon" style={{ background: '#e0f2fe', color: '#0ea5e9', width: '60px', height: '60px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', fontSize: '1.8rem' }}>
                                 <FaBookOpen />
                             </div>
                             <h3>Semester Notes</h3>
                             <p>Access comprehensive notes, video lectures, and previous year question papers.</p>
-                            <button className="section-button">View Materials →</button>
+                            <button className="section-button" onClick={(e) => { e.stopPropagation(); console.log('Button Click: Semester View'); setView('semester'); }}>View Materials →</button>
                         </div>
 
                         <div className="section-card" onClick={() => setView('ai-assistant')}>

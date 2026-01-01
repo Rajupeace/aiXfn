@@ -45,122 +45,147 @@ const FacultySettings = ({ facultyData }) => {
     };
 
     return (
-        <div className="settings-container animate-fade-in" style={{ padding: '2rem', maxWidth: '1000px' }}>
-            <div style={{ marginBottom: '2.5rem' }}>
-                <h2 style={{ fontSize: '1.8rem', color: '#1e293b', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Account Settings</h2>
-                <p style={{ color: '#64748b', margin: 0 }}>Manage your profile information and security preferences</p>
+        <div className="settings-container animate-fade-in" style={{ padding: '0', maxWidth: '1200px', margin: '0 0 4rem 0' }}>
+            <div style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div>
+                    <h2 style={{ fontSize: '2.5rem', color: 'var(--text-main)', fontWeight: 800, margin: '0 0 0.5rem 0', letterSpacing: '-1px' }}>Account Protocols</h2>
+                    <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '1.1rem', fontWeight: 500 }}>Global configuration for your faculty identity and security mesh.</p>
+                </div>
+                <div style={{ padding: '0.8rem 1.5rem', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', borderRadius: '14px', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '1px' }}>
+                    LAST SYNC: {new Date().toLocaleDateString()}
+                </div>
             </div>
 
-            <div className="glass-panel-light" style={{ padding: '0', overflow: 'hidden', border: '1px solid #e2e8f0', borderRadius: '20px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)' }}>
-                <div className="settings-tabs" style={{ display: 'flex', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+            <div className="glass-card" style={{ padding: '0', overflow: 'hidden', border: '1px solid var(--pearl-border)', background: 'white' }}>
+                <div className="settings-tabs" style={{ display: 'flex', background: '#f8fafc', padding: '0.8rem', gap: '0.8rem' }}>
                     <button
                         className={`tab-pill ${activeTab === 'profile' ? 'active' : ''}`}
                         onClick={() => setActiveTab('profile')}
                         style={{
                             flex: 1,
-                            padding: '1.25rem',
+                            padding: '1.2rem',
                             border: 'none',
+                            borderRadius: '16px',
                             background: activeTab === 'profile' ? 'white' : 'transparent',
-                            color: activeTab === 'profile' ? '#4f46e5' : '#64748b',
+                            color: activeTab === 'profile' ? 'var(--accent-primary)' : 'var(--text-muted)',
+                            boxShadow: activeTab === 'profile' ? '0 4px 15px rgba(0,0,0,0.05)' : 'none',
                             fontWeight: 700,
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '0.75rem',
-                            transition: 'all 0.2s',
-                            borderBottom: activeTab === 'profile' ? '3px solid #4f46e5' : '3px solid transparent'
+                            gap: '1rem',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            border: activeTab === 'profile' ? '1px solid var(--pearl-border)' : '1px solid transparent'
                         }}
                     >
-                        <FaUser /> Profile Details
+                        <div className="icon-box" style={{ background: activeTab === 'profile' ? 'var(--accent-primary)' : 'white', color: activeTab === 'profile' ? 'white' : 'var(--text-muted)' }}>
+                            <FaUser />
+                        </div>
+                        <span style={{ fontSize: '1rem' }}>Faculty Identity</span>
                     </button>
                     <button
                         className={`tab-pill ${activeTab === 'password' ? 'active' : ''}`}
                         onClick={() => setActiveTab('password')}
                         style={{
                             flex: 1,
-                            padding: '1.25rem',
+                            padding: '1.2rem',
                             border: 'none',
+                            borderRadius: '16px',
                             background: activeTab === 'password' ? 'white' : 'transparent',
-                            color: activeTab === 'password' ? '#4f46e5' : '#64748b',
+                            color: activeTab === 'password' ? 'var(--accent-secondary)' : 'var(--text-muted)',
+                            boxShadow: activeTab === 'password' ? '0 4px 15px rgba(0,0,0,0.05)' : 'none',
                             fontWeight: 700,
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '0.75rem',
-                            transition: 'all 0.2s',
-                            borderBottom: activeTab === 'password' ? '3px solid #4f46e5' : '3px solid transparent'
+                            gap: '1rem',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            border: activeTab === 'password' ? '1px solid var(--pearl-border)' : '1px solid transparent'
                         }}
                     >
-                        <FaLock /> Security & Password
+                        <div className="icon-box" style={{ background: activeTab === 'password' ? 'var(--accent-secondary)' : 'white', color: activeTab === 'password' ? 'white' : 'var(--text-muted)' }}>
+                            <FaLock />
+                        </div>
+                        <span style={{ fontSize: '1rem' }}>Security Protocols</span>
                     </button>
                 </div>
 
-                <div style={{ padding: '3rem', background: 'white' }}>
+                <div style={{ padding: '4rem', background: 'white' }}>
                     {activeTab === 'profile' ? (
                         <form onSubmit={saveProfile}>
-                            <div className="inputs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                            <div className="inputs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2.5rem' }}>
                                 <div className="form-group">
-                                    <label className="input-label"><FaUser /> Full Name</label>
-                                    <input className="glass-input" name="name" value={profile.name} onChange={handleProfileChange} placeholder="Enter your full name" />
+                                    <label className="input-label" style={{ color: 'var(--accent-primary)', fontWeight: 800, marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                        <FaUser /> FULL NAME
+                                    </label>
+                                    <input className="cyber-input" name="name" value={profile.name} onChange={handleProfileChange} placeholder="Enter your full name" style={{ background: '#f8fafc', fontSize: '1.1rem' }} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="input-label"><FaIdCard /> Faculty ID</label>
-                                    <input className="glass-input" name="facultyId" value={profile.facultyId} disabled style={{ background: '#f1f5f9', color: '#94a3b8' }} />
-                                    <small style={{ color: '#94a3b8', marginTop: '0.4rem', display: 'block' }}>ID cannot be changed</small>
+                                    <label className="input-label" style={{ color: 'var(--accent-secondary)', fontWeight: 800, marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                        <FaIdCard /> FACULTY IDENTIFIER
+                                    </label>
+                                    <input className="cyber-input" name="facultyId" value={profile.facultyId} disabled style={{ background: '#f1f5f9', color: '#94a3b8', fontSize: '1.1rem', cursor: 'not-allowed' }} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="input-label"><FaEnvelope /> Email Address</label>
-                                    <input className="glass-input" name="email" value={profile.email} onChange={handleProfileChange} placeholder="email@example.com" />
+                                    <label className="input-label" style={{ color: '#10b981', fontWeight: 800, marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                        <FaEnvelope /> SYSTEM EMAIL
+                                    </label>
+                                    <input className="cyber-input" name="email" value={profile.email} onChange={handleProfileChange} placeholder="email@example.com" style={{ background: '#f8fafc', fontSize: '1.1rem' }} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="input-label"><FaBuilding /> Department</label>
-                                    <input className="glass-input" name="department" value={profile.department} disabled style={{ background: '#f1f5f9', color: '#94a3b8' }} />
+                                    <label className="input-label" style={{ color: '#f59e0b', fontWeight: 800, marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                        <FaBuilding /> DEPARTMENT BRANCH
+                                    </label>
+                                    <input className="cyber-input" name="department" value={profile.department} disabled style={{ background: '#f1f5f9', color: '#94a3b8', fontSize: '1.1rem', cursor: 'not-allowed' }} />
                                 </div>
                             </div>
-                            <div style={{ marginTop: '2.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '2rem', textAlign: 'right' }}>
-                                <button type="submit" className="btn-primary-glass" style={{ padding: '0.8rem 2.5rem' }}>Save Changes</button>
+                            <div style={{ marginTop: '4rem', borderTop: '1px solid var(--pearl-border)', paddingTop: '2.5rem', textAlign: 'right' }}>
+                                <button type="submit" className="cyber-btn primary" style={{ padding: '1.2rem 3rem', marginLeft: 'auto' }}>Save Faculty Profile</button>
                             </div>
                         </form>
                     ) : (
-                        <form onSubmit={changePassword} style={{ maxWidth: '500px', margin: '0 auto' }}>
-                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                                <label className="input-label">Current Password</label>
+                        <form onSubmit={changePassword} style={{ maxWidth: '600px', margin: '0 auto' }}>
+                            <div className="form-group" style={{ marginBottom: '2rem' }}>
+                                <label className="input-label" style={{ color: 'var(--text-main)', fontWeight: 800, marginBottom: '0.8rem', display: 'block' }}>Current Password</label>
                                 <input
                                     type="password"
-                                    className="glass-input"
+                                    className="cyber-input"
                                     name="current"
                                     value={passwords.current}
                                     onChange={handlePassChange}
                                     placeholder="••••••••"
+                                    style={{ background: '#f8fafc' }}
                                 />
                             </div>
-                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                                <label className="input-label">New Password</label>
+                            <div className="form-group" style={{ marginBottom: '2rem' }}>
+                                <label className="input-label" style={{ color: 'var(--accent-primary)', fontWeight: 800, marginBottom: '0.8rem', display: 'block' }}>New Password</label>
                                 <input
                                     type="password"
-                                    className="glass-input"
+                                    className="cyber-input"
                                     name="new"
                                     value={passwords.new}
                                     onChange={handlePassChange}
                                     placeholder="Create a strong password"
+                                    style={{ background: '#f8fafc' }}
                                 />
                             </div>
-                            <div className="form-group" style={{ marginBottom: '2rem' }}>
-                                <label className="input-label">Confirm New Password</label>
+                            <div className="form-group" style={{ marginBottom: '3rem' }}>
+                                <label className="input-label" style={{ color: 'var(--accent-secondary)', fontWeight: 800, marginBottom: '0.8rem', display: 'block' }}>Confirm New Password</label>
                                 <input
                                     type="password"
-                                    className="glass-input"
+                                    className="cyber-input"
                                     name="confirm"
                                     value={passwords.confirm}
                                     onChange={handlePassChange}
                                     placeholder="Repeat new password"
+                                    style={{ background: '#f8fafc' }}
                                 />
                             </div>
                             <div style={{ textAlign: 'center' }}>
-                                <button type="submit" className="btn-primary-glass" style={{ width: '100%', padding: '1rem' }}>
-                                    Update Security Credentials
+                                <button type="submit" className="cyber-btn primary" style={{ width: '100%', justifyContent: 'center', padding: '1.2rem' }}>
+                                    Sync New Credentials
                                 </button>
                             </div>
                         </form>

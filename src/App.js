@@ -11,14 +11,35 @@ import AdvancedVideos from './Components/StudentDashboard/AdvancedVideos';
 import InterviewQA from './Components/StudentDashboard/InterviewQA';
 import AdvancedCourseMaterials from './Components/StudentDashboard/AdvancedCourseMaterials';
 import './App.css';
+import RocketSplash from './Components/RocketSplash/RocketSplash';
+import CommandPalette from './Components/CommandPalette/CommandPalette';
+import ThemeToggle from './Components/ThemeToggle/ThemeToggle';
+import AnnouncementTicker from './Components/AnnouncementTicker/AnnouncementTicker';
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isInitialized, setIsInitialized] = useState(false); // New state to track auth check
+    const [isInitialized, setIsInitialized] = useState(false);
+    const [showSplash, setShowSplash] = useState(true);
     const [studentData, setStudentData] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isFaculty, setIsFaculty] = useState(false);
     const [facultyData, setFacultyData] = useState(null);
+    const [isCmdOpen, setIsCmdOpen] = useState(false);
+
+    // Global Key Listeners
+    useEffect(() => {
+        const handleKeys = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                setIsCmdOpen(true);
+            }
+        };
+        window.addEventListener('keydown', handleKeys);
+        return () => window.removeEventListener('keydown', handleKeys);
+    }, []);
+
+    const userRole = isAdmin ? 'admin' : isFaculty ? 'faculty' : 'student';
+    const currentUser = studentData || facultyData || { studentName: 'Administrator' };
 
     // Restore session from localStorage on mount
     useEffect(() => {
@@ -28,15 +49,33 @@ function App() {
                 try {
                     const user = JSON.parse(storedUserData);
                     if (user.role === 'admin') {
-                        setIsAdmin(true);
-                        setIsAuthenticated(true);
+                        const token = localStorage.getItem('adminToken');
+                        if (token) {
+                            setIsAdmin(true);
+                            setIsAuthenticated(true);
+                        } else {
+                            console.warn('Session restore failed: Admin token missing');
+                            localStorage.removeItem('userData'); // Incomplete session
+                        }
                     } else if (user.role === 'faculty') {
-                        setIsFaculty(true);
-                        setFacultyData(user);
-                        setIsAuthenticated(true);
+                        const token = localStorage.getItem('facultyToken');
+                        if (token) {
+                            setIsFaculty(true);
+                            setFacultyData(user);
+                            setIsAuthenticated(true);
+                        } else {
+                            console.warn('Session restore failed: Faculty token missing');
+                            localStorage.removeItem('userData');
+                        }
                     } else if (user.role === 'student') {
-                        setStudentData(user);
-                        setIsAuthenticated(true);
+                        const token = localStorage.getItem('studentToken');
+                        if (token) {
+                            setStudentData(user);
+                            setIsAuthenticated(true);
+                        } else {
+                            console.warn('Session restore failed: Student token missing');
+                            localStorage.removeItem('userData');
+                        }
                     }
                 } catch (e) {
                     console.error("Failed to restore session", e);
@@ -49,15 +88,18 @@ function App() {
         restoreSession();
     }, []);
 
+    useEffect(() => {
+        if (isInitialized) {
+            // We no longer auto-hide splash. User must touch it.
+            // But we can add a small safety timeout if needed.
+        }
+    }, [isInitialized]);
+
     console.log('App State:', { isInitialized, isAuthenticated, studentData }); // Debug log
 
-    // Prevent routing until we have checked for an existing session
-    if (!isInitialized) {
-        return <div className="app-loader" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0f172a', color: 'white' }}>
-            <div className="loader-spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            <div style={{ fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.8rem', opacity: 0.8 }}>Initializing Friendly Notebook</div>
-        </div>;
+    // Prevent routing until we have checked for an existing session and splash is done
+    if (!isInitialized || showSplash) {
+        return <RocketSplash onFinish={() => setShowSplash(false)} />;
     }
 
     const rootElement = (() => {
@@ -78,6 +120,23 @@ function App() {
     return (
         <Router>
             <div className="App">
+                {isAuthenticated && (
+                    <>
+                        <CommandPalette
+                            isOpen={isCmdOpen}
+                            onClose={() => setIsCmdOpen(false)}
+                            role={userRole}
+                            userData={currentUser}
+                        />
+                        <div className="system-ui-overlay">
+                            <ThemeToggle />
+                            <div className="cmd-hint" onClick={() => setIsCmdOpen(true)}>
+                                <span className="kbd">Ctrl</span> + <span className="kbd">K</span>
+                            </div>
+                        </div>
+                        <AnnouncementTicker />
+                    </>
+                )}
                 <Routes>
                     <Route path="/" element={rootElement} />
                     <Route
