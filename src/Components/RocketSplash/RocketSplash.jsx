@@ -36,6 +36,12 @@ const RocketSplash = ({ onFinish }) => {
                 <div className="planet p-4"></div>
             </div>
 
+            <div className="speed-lines">
+                {Array.from({ length: 15 }).map((_, i) => (
+                    <div key={i} className="line" style={{ left: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 2}s` }}></div>
+                ))}
+            </div>
+
             <div className="stars">
                 {stars.map(star => (
                     <div
