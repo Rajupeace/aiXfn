@@ -287,18 +287,17 @@ const LoginRegister = ({ setIsAuthenticated, setStudentData, setIsAdmin, setIsFa
   return (
     <div className="modern-auth-wrapper">
       <div className="academic-bg">
-        <div className="knowledge-particle" style={{ top: '5%', left: '8%' }}>🎓</div>
-        <div className="knowledge-particle" style={{ top: '15%', right: '12%', animationDelay: '-2s' }}>📚</div>
+        <div className="glowing-orb orb-1"></div>
+        <div className="glowing-orb orb-2"></div>
+
+        <div className="knowledge-particle" style={{ top: '5%', left: '8%' }}>🧪</div>
+        <div className="knowledge-particle" style={{ top: '15%', right: '12%', animationDelay: '-2s' }}>🧬</div>
         <div className="knowledge-particle" style={{ top: '45%', left: '4%', animationDelay: '-5s' }}>🔬</div>
-        <div className="knowledge-particle" style={{ top: '65%', right: '8%', animationDelay: '-8s' }}>📐</div>
-        <div className="knowledge-particle" style={{ top: '10%', left: '40%', animationDelay: '-12s' }}>🧪</div>
-        <div className="knowledge-particle" style={{ bottom: '8%', left: '15%', animationDelay: '-3s' }}>📖</div>
+        <div className="knowledge-particle" style={{ top: '65%', right: '8%', animationDelay: '-8s' }}>⚛️</div>
+        <div className="knowledge-particle" style={{ top: '10%', left: '40%', animationDelay: '-12s' }}>📖</div>
+        <div className="knowledge-particle" style={{ bottom: '8%', left: '15%', animationDelay: '-3s' }}>🧠</div>
         <div className="knowledge-particle" style={{ bottom: '15%', right: '25%', animationDelay: '-6s' }}>⚖️</div>
         <div className="knowledge-particle" style={{ top: '35%', right: '4%', animationDelay: '-10s' }}>🛰️</div>
-        <div className="knowledge-particle" style={{ top: '75%', left: '45%', animationDelay: '-1s' }}>🧬</div>
-        <div className="knowledge-particle" style={{ top: '25%', left: '85%', animationDelay: '-14s' }}>📂</div>
-        <div className="knowledge-particle" style={{ bottom: '40%', right: '45%', animationDelay: '-16s' }}>✒️</div>
-        <div className="knowledge-particle" style={{ top: '55%', left: '90%', animationDelay: '-9s' }}>💻</div>
       </div>
 
       <div className={`auth-card-container ${isFormActive ? 'form-active' : ''}`}>
