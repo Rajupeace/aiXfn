@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono:wght@500;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Michroma&family=Syne:wght@700;800&family=JetBrains+Mono:wght@500;800&display=swap');
 
 .rocket-splash-container {
     height: 100vh;
     width: 100vw;
-    background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+    background: radial-gradient(circle at center, #010409 0%, #000000 100%);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -13,8 +13,8 @@
     top: 0;
     left: 0;
     z-index: 10000;
-    font-family: 'Outfit', sans-serif;
-    perspective: 1000px;
+    font-family: 'Syne', sans-serif;
+    perspective: 1200px;
     cursor: pointer;
 }
 
@@ -246,70 +246,56 @@
     }
 }
 
-.rocket-body {
-    width: 60px;
-    height: 120px;
-    background: linear-gradient(to right, #ffffff, #e2e8f0);
-    border-radius: 50% 50% 10px 10px;
+.shuttle-3d {
     position: relative;
-    box-shadow: 0 0 40px rgba(99, 102, 241, 0.5);
-    transform: rotateX(10deg);
+    width: 80px;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.rocket-window {
+.shuttle-icon {
+    font-size: 5rem;
+    color: #fff;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
+    transform: rotate(45deg);
+}
+
+.shuttle-exhaust {
+    position: absolute;
+    bottom: -10px;
+    left: 10px;
+    transform: rotate(45deg);
+}
+
+.flame-core {
     width: 20px;
-    height: 20px;
-    background: #38bdf8;
-    border: 3px solid #1e293b;
+    height: 60px;
+    background: linear-gradient(to bottom, #fff, #4fd1c5, transparent);
     border-radius: 50%;
+    filter: blur(2px);
+    animation: pulseFlame 0.1s infinite alternate;
+}
+
+.flame-glow {
     position: absolute;
-    top: 25%;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 0;
+    left: -10px;
+    width: 40px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(79, 209, 197, 0.4), transparent);
+    filter: blur(15px);
 }
 
-.rocket-fins-left,
-.rocket-fins-right {
-    position: absolute;
-    bottom: 5px;
-    width: 30px;
-    height: 40px;
-    background: #4f46e5;
-    z-index: -1;
-}
-
-.rocket-fins-left {
-    left: -20px;
-    border-radius: 100% 0 0 10px;
-    transform: skewY(-20deg);
-}
-
-.rocket-fins-right {
-    right: -20px;
-    border-radius: 0 100% 10px 0;
-    transform: skewY(20deg);
-}
-
-.exhaust-flame {
-    position: absolute;
-    bottom: -80px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 25px;
-    height: 90px;
-    background: linear-gradient(to bottom, #fde047, #f97316, #ef4444, transparent);
-    filter: blur(4px);
-    animation: flicker 0.1s infinite alternate;
-}
-
-@keyframes flicker {
+@keyframes pulseFlame {
     from {
-        height: 80px;
+        height: 55px;
         opacity: 0.8;
     }
 
     to {
-        height: 100px;
+        height: 75px;
         opacity: 1;
     }
 }

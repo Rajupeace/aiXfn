@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaCrown, FaBook, FaRegFileAlt, FaRocket } from 'react-icons/fa';
+import { FaCrown, FaBook, FaRegFileAlt, FaSpaceShuttle, FaRocket } from 'react-icons/fa';
 import './RocketSplash.css';
 
 const RocketSplash = ({ onFinish }) => {
@@ -70,13 +70,11 @@ const RocketSplash = ({ onFinish }) => {
             <div className="rocket-scene">
                 <div className="rocket-path-zig-zag">
                     <div className="rocket-wrapper">
-                        <div className="rocket-3d">
-                            <div className="rocket-body">
-                                <div className="rocket-window"></div>
-                                <div className="rocket-fins-left"></div>
-                                <div className="rocket-fins-right"></div>
-                                <div className="exhaust-flame"></div>
-                                <div className="engine-glow"></div>
+                        <div className="shuttle-3d">
+                            <FaSpaceShuttle className="shuttle-icon" />
+                            <div className="shuttle-exhaust">
+                                <div className="flame-core"></div>
+                                <div className="flame-glow"></div>
                             </div>
                         </div>
                     </div>
@@ -86,7 +84,6 @@ const RocketSplash = ({ onFinish }) => {
             <div className="brand-gate">
                 <div className="brand-main">
                     {brandName.split("").map((char, index) => {
-                        const totalChars = brandName.length;
                         const delay = 0.5 + index * 0.08;
                         return (
                             <span
