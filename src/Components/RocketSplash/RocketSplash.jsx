@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { FaCrown, FaBook, FaRegFileAlt, FaFlask, FaMicroscope, FaGraduationCap, FaRocket } from 'react-icons/fa';
-import { GiUfo, GiRuler } from 'react-icons/gi';
+import { FaCrown, FaBook, FaRegFileAlt, FaFlask, FaMicroscope, FaGraduationCap, FaRocket, FaAtom, FaDna, FaBrain } from 'react-icons/fa';
+import { GiUfo, GiPencilRuler, GiScales, GiProcessor, GiMaterialsScience, GiOpenBook, GiPaper, GiScrollUnfurled } from 'react-icons/gi';
 import './RocketSplash.css';
 
 const RocketSplash = ({ onFinish }) => {
@@ -60,24 +60,39 @@ const RocketSplash = ({ onFinish }) => {
                 ))}
             </div>
 
-            {/* Floating Educational & Lab Assets */}
+            {/* Floating Educational & Lab Assets - Expanded Grid */}
             <div className="floating-assets">
+                {/* Layer 1: Books & Papers */}
                 <div className="asset-item book-1"><FaBook /></div>
                 <div className="asset-item paper-1"><FaRegFileAlt /></div>
-                <div className="asset-item paper-2"><FaRegFileAlt /></div>
-                <div className="asset-item cap-1"><FaGraduationCap /></div>
+                <div className="asset-item paper-2"><GiPaper /></div>
+                <div className="asset-item scroll-1"><GiScrollUnfurled /></div>
+
+                {/* Layer 2: Lab & Science */}
                 <div className="asset-item flask-1"><FaFlask /></div>
                 <div className="asset-item microscope-1"><FaMicroscope /></div>
-                <div className="asset-item ruler-1"><GiRuler /></div>
-                <div className="asset-item book-2"><FaBook /></div>
+                <div className="asset-item atom-1"><FaAtom /></div>
+                <div className="asset-item dna-1"><FaDna /></div>
+
+                {/* Layer 3: Tools & Metrics */}
+                <div className="asset-item ruler-1"><GiPencilRuler /></div>
+                <div className="asset-item scale-1"><GiScales /></div>
+                <div className="asset-item processor-1"><GiProcessor /></div>
+                <div className="asset-item science-1"><GiMaterialsScience /></div>
+
+                {/* Layer 4: Intelligence */}
+                <div className="asset-item cap-1"><FaGraduationCap /></div>
+                <div className="asset-item brain-1"><FaBrain /></div>
+                <div className="asset-item open-book-1"><GiOpenBook /></div>
             </div>
 
             <div className="rocket-scene">
                 <div className="rocket-path-zig-zag">
                     <div className="rocket-wrapper">
                         <div className="ufo-3d">
-                            <GiUfo className="ufo-icon" />
+                            <GiUfo className="ufo-icon alien-ship" />
                             <div className="ufo-beam"></div>
+                            <div className="ufo-energy-ring"></div>
                         </div>
                     </div>
                 </div>
@@ -91,7 +106,7 @@ const RocketSplash = ({ onFinish }) => {
                             <span
                                 key={index}
                                 style={{ animationDelay: `${delay}s` }}
-                                className="letter-3d"
+                                className="letter-3d highlight-font"
                             >
                                 {char === " " ? "\u00A0" : char}
                             </span>
@@ -104,23 +119,23 @@ const RocketSplash = ({ onFinish }) => {
             </div>
 
             <div className="interface-hud">
-                <div className="hud-line">SYSTEM INITIATING...</div>
+                <div className="hud-line">QUANTUM SEQUENCE INITIATING...</div>
                 <div className="loading-meter">
                     <div className="meter-fill"></div>
                 </div>
                 <div className="hud-metrics">
-                    <span>STABILITY: 100%</span>
+                    <span>NEURAL LINK: ACTIVE</span>
                     <span>GRAVITY: 0.0g</span>
                 </div>
                 <div className="enter-action">
                     <div className="action-circle">
-                        <FaRocket />
+                        <GiUfo className="mini-ufo" />
                     </div>
-                    <span className="action-text">FORCE START MISSION</span>
+                    <span className="action-text">ENGAGE SYSTEM</span>
                 </div>
             </div>
 
-            <div className="vignan-identity">Vignan's University • Next-Gen Portal</div>
+            <div className="vignan-identity">Vignan's University • Cybernetic Core 2026</div>
         </div>
     );
 };
