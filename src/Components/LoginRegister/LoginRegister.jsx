@@ -229,8 +229,18 @@ const LoginRegister = ({ setIsAuthenticated, setStudentData, setIsAdmin, setIsFa
         return (
           <div className="selection-content">
             <div className="hero-section animate-slide-up">
-              <h1 className="hero-title">Friendly Notebook</h1>
-              <p className="hero-subtitle">Vignan University Elite Portal</p>
+              <h1 className="hero-title">
+                {"Friendly Notebook".split("").map((char, index) => (
+                  <span
+                    key={index}
+                    className="letter-3d-login"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    {char === " " ? "\u00A0" : char}
+                  </span>
+                ))}
+              </h1>
+              <p className="hero-subtitle">Next-Gen Academy Portal</p>
             </div>
 
             <div className="modern-role-grid">
