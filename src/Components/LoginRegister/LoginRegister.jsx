@@ -310,9 +310,13 @@ const LoginRegister = ({ setIsAuthenticated, setStudentData, setIsAdmin, setIsFa
         <div className="knowledge-particle" style={{ top: '35%', right: '4%', animationDelay: '-10s' }}>🛰️</div>
       </div>
 
-      <div className={`auth-card-container ${isFormActive ? 'form-active' : ''}`}>
-        {renderForm()}
-      </div>
+      {isFormActive ? (
+        renderForm()
+      ) : (
+        <div className="auth-card-container">
+          {renderForm()}
+        </div>
+      )}
     </div>
   );
 };

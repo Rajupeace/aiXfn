@@ -119,13 +119,8 @@ const RocketSplash = ({ onFinish }) => {
             </div>
 
             <div className="interface-hud">
-                <div className="hud-line">QUANTUM SEQUENCE INITIATING...</div>
                 <div className="loading-meter">
                     <div className="meter-fill"></div>
-                </div>
-                <div className="hud-metrics">
-                    <span>NEURAL LINK: ACTIVE</span>
-                    <span>GRAVITY: 0.0g</span>
                 </div>
                 <div className="enter-action">
                     <div className="action-circle">
