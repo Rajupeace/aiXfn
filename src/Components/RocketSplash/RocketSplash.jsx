@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { FaCrown, FaBook, FaRegFileAlt, FaSpaceShuttle, FaRocket } from 'react-icons/fa';
+import { FaCrown, FaBook, FaRegFileAlt, FaFlask, FaMicroscope, FaGraduationCap, FaRocket } from 'react-icons/fa';
+import { GiUfo, GiRuler } from 'react-icons/gi';
 import './RocketSplash.css';
 
 const RocketSplash = ({ onFinish }) => {
@@ -59,23 +60,24 @@ const RocketSplash = ({ onFinish }) => {
                 ))}
             </div>
 
-            {/* Floating Educational Assets */}
+            {/* Floating Educational & Lab Assets */}
             <div className="floating-assets">
                 <div className="asset-item book-1"><FaBook /></div>
                 <div className="asset-item paper-1"><FaRegFileAlt /></div>
                 <div className="asset-item paper-2"><FaRegFileAlt /></div>
-                <div className="asset-item cap-1">🎓</div>
+                <div className="asset-item cap-1"><FaGraduationCap /></div>
+                <div className="asset-item flask-1"><FaFlask /></div>
+                <div className="asset-item microscope-1"><FaMicroscope /></div>
+                <div className="asset-item ruler-1"><GiRuler /></div>
+                <div className="asset-item book-2"><FaBook /></div>
             </div>
 
             <div className="rocket-scene">
                 <div className="rocket-path-zig-zag">
                     <div className="rocket-wrapper">
-                        <div className="shuttle-3d">
-                            <FaSpaceShuttle className="shuttle-icon" />
-                            <div className="shuttle-exhaust">
-                                <div className="flame-core"></div>
-                                <div className="flame-glow"></div>
-                            </div>
+                        <div className="ufo-3d">
+                            <GiUfo className="ufo-icon" />
+                            <div className="ufo-beam"></div>
                         </div>
                     </div>
                 </div>
