@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { FaCrown, FaBook, FaRegFileAlt, FaFlask, FaMicroscope, FaGraduationCap, FaRocket, FaAtom, FaDna, FaBrain } from 'react-icons/fa';
+import { FaCrown, FaBook, FaRegFileAlt, FaFlask, FaMicroscope, FaGraduationCap, FaRocket, FaAtom, FaDna, FaBrain, FaSun, FaMoon } from 'react-icons/fa';
 import { GiUfo, GiPencilRuler, GiScales, GiProcessor, GiMaterialsScience, GiOpenBook, GiPaper, GiScrollUnfurled } from 'react-icons/gi';
 import './RocketSplash.css';
 
 const RocketSplash = ({ onFinish }) => {
     const [stars, setStars] = useState([]);
     const [isExiting, setIsExiting] = useState(false);
+    const [theme, setTheme] = useState(localStorage.getItem('system-theme') || 'cyber');
     const brandName = "Friendly Notebook";
 
     const handleEnter = () => {
@@ -15,7 +16,16 @@ const RocketSplash = ({ onFinish }) => {
         }, 800);
     };
 
+    const toggleTheme = (e) => {
+        e.stopPropagation();
+        const newTheme = theme === 'pearl' ? 'cyber' : 'pearl';
+        setTheme(newTheme);
+        document.body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('system-theme', newTheme);
+    };
+
     useEffect(() => {
+        document.body.setAttribute('data-theme', theme);
         const newStars = Array.from({ length: 80 }).map((_, i) => ({
             id: i,
             left: `${Math.random() * 100}%`,
@@ -25,10 +35,16 @@ const RocketSplash = ({ onFinish }) => {
             delay: `${Math.random() * 5}s`
         }));
         setStars(newStars);
-    }, []);
+    }, [theme]);
 
     return (
-        <div className={`rocket-splash-container ${isExiting ? 'exit-active' : ''}`} onClick={handleEnter}>
+        <div className={`rocket-splash-container ${isExiting ? 'exit-active' : ''}`} onClick={handleEnter} data-splash-theme={theme}>
+            {/* Theme Toggle in Splash */}
+            <div className="splash-theme-toggle" onClick={toggleTheme}>
+                {theme === 'pearl' ? <FaMoon /> : <FaSun />}
+                <span>{theme === 'pearl' ? 'DARK MODE' : 'LIGHT MODE'}</span>
+            </div>
+
             {/* Solar System Background */}
             <div className="solar-system">
                 <div className="planet p-1"></div>
@@ -60,7 +76,7 @@ const RocketSplash = ({ onFinish }) => {
                 ))}
             </div>
 
-            {/* Floating Educational & Lab Assets - Expanded Grid */}
+            {/* Floating Educational & Lab Assets */}
             <div className="floating-assets">
                 {/* Layer 1: Books & Papers */}
                 <div className="asset-item book-1"><FaBook /></div>
@@ -106,7 +122,7 @@ const RocketSplash = ({ onFinish }) => {
                             <span
                                 key={index}
                                 style={{ animationDelay: `${delay}s` }}
-                                className="letter-3d highlight-font"
+                                className="letter-3d"
                             >
                                 {char === " " ? "\u00A0" : char}
                             </span>
@@ -126,11 +142,11 @@ const RocketSplash = ({ onFinish }) => {
                     <div className="action-circle">
                         <GiUfo className="mini-ufo" />
                     </div>
-                    <span className="action-text">ENGAGE SYSTEM</span>
+                    <span className="action-text">ENGAGE MISSION</span>
                 </div>
             </div>
 
-            <div className="vignan-identity">Vignan's University • Cybernetic Core 2026</div>
+            <div className="vignan-identity">Vignan's University • Next-Gen Portal</div>
         </div>
     );
 };

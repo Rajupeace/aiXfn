@@ -3,13 +3,29 @@
 :root {
   --primary: #10b981;
   --primary-soft: rgba(16, 185, 129, 0.1);
-  --bg-light: #ffffff;
-  --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  --glass: rgba(255, 255, 255, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.6);
+  --login-bg: radial-gradient(circle at center, #010409 0%, #000000 100%);
+  --login-card-bg: rgba(255, 255, 255, 0.03);
+  --login-text: #ffffff;
+  --login-accent: #22d3ee;
+  --login-orb-1: #4f46e5;
+  --login-orb-2: #10b981;
+  --login-glass-border: rgba(255, 255, 255, 0.08);
   --text-main: #1e293b;
+  /* Keep if used elsewhere, otherwise remove */
   --text-muted: #64748b;
+  /* Keep if used elsewhere, otherwise remove */
   --shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+  /* Keep if used elsewhere, otherwise remove */
+}
+
+[data-theme='pearl'] {
+  --login-bg: radial-gradient(circle at center, #f0f9ff 0%, #e0f2fe 100%);
+  --login-card-bg: rgba(255, 255, 255, 0.7);
+  --login-text: #0f172a;
+  --login-accent: #0ea5e9;
+  --login-orb-1: #6366f1;
+  --login-orb-2: #34d399;
+  --login-glass-border: rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -20,7 +36,12 @@
 
 body {
   overflow-x: hidden;
-  background: var(--bg-light);
+  background: #000;
+  transition: background 0.5s ease;
+}
+
+[data-theme='pearl'] body {
+  background: #f8fafc;
 }
 
 .modern-auth-wrapper {
@@ -30,11 +51,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, #010409 0%, #000000 100%);
+  background: var(--login-bg);
   font-family: 'Syne', sans-serif;
-  color: var(--text-main);
+  color: var(--login-text);
   overflow: hidden;
   perspective: 2000px;
+  transition: background 1s ease;
 }
 
 /* --- 3D ORBITAL BACKGROUND --- */
@@ -54,19 +76,24 @@ body {
   filter: blur(80px);
   opacity: 0.15;
   animation: orbOrbit 20s infinite alternate ease-in-out;
+  transition: background 1s ease;
 }
 
 .orb-1 {
-  background: #4f46e5;
+  background: var(--login-orb-1);
   top: 10%;
   left: 10%;
 }
 
 .orb-2 {
-  background: #10b981;
+  background: var(--login-orb-2);
   bottom: 10%;
   right: 10%;
   animation-delay: -5s;
+}
+
+[data-theme='pearl'] .glowing-orb {
+  opacity: 0.3;
 }
 
 @keyframes orbOrbit {
@@ -85,18 +112,23 @@ body {
   z-index: 10;
   width: 95%;
   max-width: 1250px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--login-card-bg);
   backdrop-filter: blur(50px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--login-glass-border);
   border-radius: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 4rem 2rem;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4), inset 0 0 40px rgba(255, 255, 255, 0.02);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4);
   transform-style: preserve-3d;
   animation: entrance-3d 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: background 0.5s ease, border 0.5s ease;
+}
+
+[data-theme='pearl'] .auth-card-container {
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.05);
 }
 
 @keyframes entrance-3d {
@@ -121,7 +153,7 @@ body {
   font-family: 'Michroma', sans-serif;
   font-size: 5rem;
   font-weight: 900;
-  color: #fff;
+  color: var(--login-text);
   margin-bottom: 0.5rem;
   letter-spacing: -2px;
   display: flex;
@@ -140,6 +172,13 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+[data-theme='pearl'] .letter-3d-login {
+  background: linear-gradient(to bottom, #0f172a, #64748b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 @keyframes letter-reveal {
   to {
     opacity: 1;
@@ -149,7 +188,7 @@ body {
 
 .hero-subtitle {
   font-size: 0.8rem;
-  color: #22d3ee;
+  color: var(--login-accent);
   letter-spacing: 12px;
   text-transform: uppercase;
   font-weight: 800;
@@ -218,9 +257,9 @@ body {
 }
 
 .modern-role-card {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: var(--login-card-bg);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--login-glass-border);
   border-radius: 35px;
   padding: 3.5rem 2rem;
   cursor: pointer;
@@ -234,9 +273,13 @@ body {
 
 .modern-role-card:hover {
   transform: translateY(-12px);
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
   border-color: var(--primary);
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='pearl'] .modern-role-card:hover {
+  background: #ffffff;
 }
 
 .role-icon-wrapper {
@@ -284,11 +327,12 @@ body {
   font-size: 1.6rem;
   font-weight: 800;
   margin-bottom: 0.8rem;
-  color: var(--text-main);
+  color: var(--login-text);
 }
 
 .role-content p {
-  color: var(--text-muted);
+  color: var(--login-text);
+  opacity: 0.7;
   font-size: 0.95rem;
   line-height: 1.6;
 }
@@ -315,9 +359,9 @@ body {
 .inner-glass-panel {
   width: 100%;
   max-width: 480px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--login-card-bg);
   backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--login-glass-border);
   padding: 3rem;
   border-radius: 40px;
   box-shadow: 0 50px 120px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.02);
@@ -328,20 +372,25 @@ body {
   animation: entrance-3d 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+[data-theme='pearl'] .inner-glass-panel {
+  box-shadow: 0 50px 120px rgba(0, 0, 0, 0.05);
+}
+
 .form-header {
   text-align: center;
   margin-bottom: 2rem;
 }
 
 .form-header h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: 2.2rem;
-  color: var(--text-main);
+  font-family: 'Michroma', sans-serif;
+  font-size: 1.8rem;
+  color: var(--login-text);
   margin-bottom: 0.3rem;
 }
 
 .form-header p {
-  color: var(--text-muted);
+  color: var(--login-text);
+  opacity: 0.6;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -349,31 +398,16 @@ body {
 .role-avatar-mini {
   width: 80px;
   height: 80px;
-  background: white;
+  background: var(--login-bg);
   border-radius: 25px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2.2rem;
   margin: 0 auto 1.5rem;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
   transition: all 0.4s ease;
-  border: 4px solid white;
-}
-
-.student .role-avatar-mini {
-  color: #10b981;
-  box-shadow: 0 15px 35px rgba(16, 185, 129, 0.3);
-}
-
-.faculty .role-avatar-mini {
-  color: #8b5cf6;
-  box-shadow: 0 15px 35px rgba(139, 92, 246, 0.3);
-}
-
-.admin .role-avatar-mini {
-  color: #f59e0b;
-  box-shadow: 0 15px 35px rgba(245, 158, 11, 0.3);
+  border: 2px solid var(--login-glass-border);
 }
 
 .input-group {
@@ -394,7 +428,8 @@ body {
   left: 1.2rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-muted);
+  color: var(--login-text);
+  opacity: 0.5;
   font-size: 1rem;
   pointer-events: none;
   transition: 0.3s;
@@ -403,12 +438,26 @@ body {
 .input-group input {
   width: 100%;
   padding: 1.2rem 1.2rem 1.2rem 3.2rem;
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--login-glass-border);
   border-radius: 18px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  color: var(--text-main);
+  color: var(--login-text);
+}
+
+[data-theme='pearl'] .input-group input {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.input-group input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px) scale(1.01);
+}
+
+[data-theme='pearl'] .input-group input:focus {
+  background: white;
 }
 
 .input-group input:focus {
