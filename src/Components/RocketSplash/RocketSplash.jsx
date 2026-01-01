@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { FaCrown, FaBook, FaRegFileAlt, FaRocket } from 'react-icons/fa';
 import './RocketSplash.css';
 
 const RocketSplash = ({ onFinish }) => {
@@ -10,16 +11,16 @@ const RocketSplash = ({ onFinish }) => {
         setIsExiting(true);
         setTimeout(() => {
             if (onFinish) onFinish();
-        }, 800); // Duration of the exit animation
+        }, 800);
     };
 
     useEffect(() => {
-        const newStars = Array.from({ length: 60 }).map((_, i) => ({
+        const newStars = Array.from({ length: 80 }).map((_, i) => ({
             id: i,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            size: `${Math.random() * 3 + 1}px`,
-            duration: `${Math.random() * 2 + 1}s`,
+            size: `${Math.random() * 2 + 1}px`,
+            duration: `${Math.random() * 3 + 1}s`,
             delay: `${Math.random() * 5}s`
         }));
         setStars(newStars);
@@ -27,7 +28,13 @@ const RocketSplash = ({ onFinish }) => {
 
     return (
         <div className={`rocket-splash-container ${isExiting ? 'exit-active' : ''}`} onClick={handleEnter}>
-            <div className="space-overlay"></div>
+            {/* Solar System Background */}
+            <div className="solar-system">
+                <div className="planet p-1"></div>
+                <div className="planet p-2"></div>
+                <div className="planet p-3"></div>
+                <div className="planet p-4"></div>
+            </div>
 
             <div className="stars">
                 {stars.map(star => (
@@ -46,61 +53,69 @@ const RocketSplash = ({ onFinish }) => {
                 ))}
             </div>
 
-            {/* Orbiting Graduation Cap */}
-            <div className="flying-cap-container">
-                <div className="flying-cap">
-                    <div className="cap-top"></div>
-                    <div className="cap-bottom"></div>
-                    <div className="cap-tassel"></div>
-                </div>
+            {/* Floating Educational Assets */}
+            <div className="floating-assets">
+                <div className="asset-item book-1"><FaBook /></div>
+                <div className="asset-item paper-1"><FaRegFileAlt /></div>
+                <div className="asset-item paper-2"><FaRegFileAlt /></div>
+                <div className="asset-item cap-1">🎓</div>
             </div>
 
             <div className="rocket-scene">
-                <div className="rocket-wrapper">
-                    <div className="rocket">
-                        <div className="rocket-window"></div>
-                        <div className="rocket-fins-left"></div>
-                        <div className="rocket-fins-right"></div>
-                        <div className="exhaust-flame"></div>
-                        <div className="engine-glow"></div>
+                <div className="rocket-path-zig-zag">
+                    <div className="rocket-wrapper">
+                        <div className="rocket-3d">
+                            <div className="rocket-body">
+                                <div className="rocket-window"></div>
+                                <div className="rocket-fins-left"></div>
+                                <div className="rocket-fins-right"></div>
+                                <div className="exhaust-flame"></div>
+                                <div className="engine-glow"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="brand-container">
-                <div className="brand-arc">
+            <div className="brand-gate">
+                <div className="brand-main">
                     {brandName.split("").map((char, index) => {
-                        // Calculate rotation for arc effect
                         const totalChars = brandName.length;
-                        const angle = (index - (totalChars - 1) / 2) * 12; // 12 degrees apart
+                        const delay = 0.5 + index * 0.08;
                         return (
                             <span
                                 key={index}
-                                style={{
-                                    animationDelay: `${0.8 + index * 0.1}s`,
-                                    transform: `rotate(${angle}deg) translateY(-20px)`,
-                                    transformOrigin: 'bottom center',
-                                    display: 'inline-block'
-                                }}
-                                className="letter"
+                                style={{ animationDelay: `${delay}s` }}
+                                className="letter-3d"
                             >
                                 {char === " " ? "\u00A0" : char}
                             </span>
                         );
                     })}
                 </div>
-            </div>
-
-            <div className="loading-ui">
-                <div className="loading-text">Igniting Friendly Workspace</div>
-                <div className="loading-bar-wrapper">
-                    <div className="loading-bar"></div>
+                <div className="creator-tag">
+                    Created by <span className="creator-name">Bobby Martin <FaCrown className="crown-icon" /></span>
                 </div>
-                <div className="launch-status">System Check: Optimal</div>
-                <div className="touch-hint pulse">Tap anywhere to Enter 🚀</div>
             </div>
 
-            <div className="vignan-tag">Vignan's Modern Academy</div>
+            <div className="interface-hud">
+                <div className="hud-line">SYSTEM INITIATING...</div>
+                <div className="loading-meter">
+                    <div className="meter-fill"></div>
+                </div>
+                <div className="hud-metrics">
+                    <span>STABILITY: 100%</span>
+                    <span>GRAVITY: 0.0g</span>
+                </div>
+                <div className="enter-action">
+                    <div className="action-circle">
+                        <FaRocket />
+                    </div>
+                    <span className="action-text">FORCE START MISSION</span>
+                </div>
+            </div>
+
+            <div className="vignan-identity">Vignan's University • Next-Gen Portal</div>
         </div>
     );
 };

@@ -114,19 +114,69 @@ body {
 
 .hero-title {
   font-family: 'Playfair Display', serif;
-  font-size: 4rem;
-  font-weight: 700;
+  font-size: 4.5rem;
+  font-weight: 900;
   color: var(--text-main);
   margin-bottom: 0.5rem;
-  letter-spacing: -1px;
+  letter-spacing: -2px;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  animation: float-3d 4s infinite ease-in-out;
+}
+
+@keyframes float-3d {
+
+  0%,
+  100% {
+    transform: perspective(1000px) translateZ(0) rotateX(0);
+  }
+
+  50% {
+    transform: perspective(1000px) translateZ(50px) rotateX(5deg);
+  }
 }
 
 .hero-subtitle {
-  font-size: 1rem;
-  color: var(--text-muted);
-  letter-spacing: 5px;
+  font-size: 0.85rem;
+  color: var(--primary);
+  letter-spacing: 8px;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 800;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 5px 15px;
+  border-radius: 50px;
+  display: inline-block;
+}
+
+/* --- ADVANCED PARTICLE MOTIONS --- */
+.knowledge-particle {
+  position: absolute;
+  font-size: 2.2rem;
+  opacity: 0.5;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.1));
+  animation: zig-zag-float 12s infinite alternate ease-in-out;
+}
+
+@keyframes zig-zag-float {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+
+  25% {
+    transform: translate(100px, -50px) scale(1.2) rotate(15deg);
+  }
+
+  50% {
+    transform: translate(-50px, -150px) scale(0.8) rotate(-15deg);
+  }
+
+  75% {
+    transform: translate(150px, -100px) scale(1.1) rotate(10deg);
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
 }
 
 /* --- ROLE GRID --- */

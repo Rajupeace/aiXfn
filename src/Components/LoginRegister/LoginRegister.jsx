@@ -272,7 +272,10 @@ const LoginRegister = ({ setIsAuthenticated, setStudentData, setIsAdmin, setIsFa
             </div>
 
             <div className="selection-footer animate-slide-up">
-              Empowering Excellence at Vignan University • 2026
+              <div>Next-Gen Academy Portal • 2026</div>
+              <div className="creator-credit" style={{ marginTop: '0.8rem', opacity: 0.8, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                Created by <span style={{ fontWeight: 800, color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>Bobbymartin <span style={{ color: '#fbce37' }}>♛</span></span>
+              </div>
             </div>
           </div>
         );
