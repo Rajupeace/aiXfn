@@ -19,12 +19,12 @@
 }
 
 [data-theme='pearl'] {
-  --login-bg: radial-gradient(circle at center, #f0f9ff 0%, #e0f2fe 100%);
-  --login-card-bg: rgba(255, 255, 255, 0.7);
+  --login-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --login-card-bg: #ffffff;
   --login-text: #0f172a;
-  --login-accent: #0ea5e9;
-  --login-orb-1: #6366f1;
-  --login-orb-2: #34d399;
+  --login-accent: #6366f1;
+  --login-orb-1: rgba(99, 102, 241, 0.2);
+  --login-orb-2: rgba(52, 211, 153, 0.2);
   --login-glass-border: rgba(0, 0, 0, 0.05);
 }
 
@@ -37,7 +37,7 @@
 body {
   overflow-x: hidden;
   background: #000;
-  transition: background 0.5s ease;
+  transition: background 1s ease;
 }
 
 [data-theme='pearl'] body {

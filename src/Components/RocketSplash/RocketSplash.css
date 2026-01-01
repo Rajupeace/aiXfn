@@ -4,22 +4,25 @@
     --splash-bg: radial-gradient(circle at center, #010409 0%, #000000 100%);
     --splash-text: #ffffff;
     --splash-accent: #22d3ee;
-    --splash-orb-filter: brightness(1) contrast(1.2);
     --splash-speed-line: rgba(255, 255, 255, 0.3);
     --ufo-color: #f8fafc;
-    --planet-ring: rgba(255, 255, 255, 0.1);
+    --ufo-glow: 0 0 40px #22d3ee;
+    --planet-shadow: inset -10px -10px 30px rgba(0, 0, 0, 0.5);
+    --ui-glass: rgba(255, 255, 255, 0.05);
+    --ui-border: rgba(255, 255, 255, 0.1);
 }
 
-/* --- PREMIUM PEARL (LIGHT) MODE --- */
+/* --- DRIVER: PEARL (LIGHT/GOD) MODE --- */
 [data-splash-theme='pearl'] {
-    --splash-bg: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
-    /* Sophisticated warm pearl gradient */
-    --splash-text: #2d3436;
-    --splash-accent: #6c5ce7;
-    --splash-orb-filter: saturate(1.2) brightness(1.1);
-    --splash-speed-line: rgba(108, 92, 231, 0.15);
-    --ufo-color: #ffffff;
-    --planet-ring: rgba(108, 92, 231, 0.1);
+    --splash-bg: linear-gradient(135deg, #f0f7ff 0%, #ffffff 50%, #e0e7ff 100%);
+    --splash-text: #1e1b4b;
+    --splash-accent: #4f46e5;
+    --splash-speed-line: rgba(79, 70, 229, 0.1);
+    --ufo-color: #1e1b4b;
+    --ufo-glow: 0 10px 40px rgba(79, 70, 229, 0.2);
+    --planet-shadow: inset -10px -10px 40px rgba(255, 255, 255, 1), 0 10px 30px rgba(0, 0, 0, 0.05);
+    --ui-glass: rgba(255, 255, 255, 0.8);
+    --ui-border: rgba(79, 70, 229, 0.1);
 }
 
 .rocket-splash-container {
@@ -38,41 +41,29 @@
     font-family: 'Syne', sans-serif;
     perspective: 1200px;
     cursor: pointer;
-    transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background 1s ease;
 }
 
 /* Theme Toggle */
 .splash-theme-toggle {
     position: absolute;
-    top: 35px;
-    right: 35px;
+    top: 30px;
+    right: 30px;
     z-index: 10001;
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(20px);
-    padding: 12px 24px;
+    gap: 10px;
+    background: var(--ui-glass);
+    backdrop-filter: blur(15px);
+    padding: 10px 20px;
     border-radius: 50px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--ui-border);
     color: var(--splash-text);
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 800;
     letter-spacing: 2px;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    cursor: pointer;
+    transition: all 0.3s;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-.splash-theme-toggle:hover {
-    transform: scale(1.05) translateY(-2px);
-    background: rgba(255, 255, 255, 0.15);
-}
-
-[data-splash-theme='pearl'] .splash-theme-toggle {
-    background: rgba(0, 0, 0, 0.03);
-    border-color: rgba(0, 0, 0, 0.05);
-    box-shadow: 0 10px 30px rgba(108, 92, 231, 0.1);
 }
 
 /* Solar System */
@@ -86,86 +77,102 @@
 .planet {
     position: absolute;
     border-radius: 50%;
-    filter: blur(1px) var(--splash-orb-filter);
-    opacity: 0.9;
-    box-shadow: inset -20px -20px 50px rgba(0, 0, 0, 0.4), 0 0 60px rgba(255, 255, 255, 0.1);
-    animation: cinematicOrbit 40s infinite linear;
-    transition: all 1.5s ease;
-}
-
-[data-splash-theme='pearl'] .planet {
-    box-shadow: inset -20px -20px 50px rgba(255, 255, 255, 0.8), 0 20px 60px rgba(108, 92, 231, 0.15);
+    filter: blur(2px);
     opacity: 0.8;
+    box-shadow: var(--planet-shadow);
+    transition: all 1s ease;
 }
 
 .p-1 {
-    width: 140px;
-    height: 140px;
-    background: radial-gradient(circle at 30% 30%, #4f46e5, #312e81);
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle at 30% 30%, #4f46e5, #1e1b4b);
     top: 15%;
     left: 10%;
+    animation: orbit1 40s infinite linear;
 }
 
 .p-2 {
-    width: 220px;
-    height: 220px;
+    width: 180px;
+    height: 180px;
     background: radial-gradient(circle at 30% 30%, #f43f5e, #881337);
     bottom: 10%;
     right: 15%;
-    animation-duration: 60s;
+    animation: orbit2 60s infinite linear;
 }
 
 .p-3 {
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle at 30% 30%, #22d3ee, #083344);
-    top: 55%;
-    right: 8%;
-    animation-duration: 30s;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle at 30% 30%, #0ea5e9, #0c4a6e);
+    top: 50%;
+    right: 10%;
+    animation: orbit3 30s infinite linear;
 }
 
 .p-4 {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
     background: radial-gradient(circle at 30% 30%, #10b981, #064e3b);
-    bottom: 35%;
-    left: 18%;
-    animation-duration: 45s;
+    bottom: 30%;
+    left: 20%;
+    animation: orbit4 35s infinite linear;
 }
 
+/* Light Mode Planets - Glowing Pearls */
 [data-splash-theme='pearl'] .p-1 {
-    background: radial-gradient(circle at 30% 30%, #a29bfe, #efecff);
+    background: radial-gradient(circle at 30% 30%, #818cf8, #e0e7ff);
 }
 
 [data-splash-theme='pearl'] .p-2 {
-    background: radial-gradient(circle at 30% 30%, #fab1a0, #fff3f0);
+    background: radial-gradient(circle at 30% 30%, #fb7185, #fff1f2);
 }
 
 [data-splash-theme='pearl'] .p-3 {
-    background: radial-gradient(circle at 30% 30%, #81ecec, #f0ffff);
+    background: radial-gradient(circle at 30% 30%, #38bdf8, #f0f9ff);
 }
 
 [data-splash-theme='pearl'] .p-4 {
-    background: radial-gradient(circle at 30% 30%, #55efc4, #e8fff8);
+    background: radial-gradient(circle at 30% 30%, #34d399, #ecfdf5);
 }
 
-.planet::after {
-    content: '';
-    position: absolute;
-    inset: -30px;
-    border: 1px solid var(--planet-ring);
-    border-radius: 50%;
-    transform: rotateX(75deg);
-    transition: border 1.5s ease;
-}
-
-@keyframes cinematicOrbit {
+@keyframes orbit1 {
     from {
-        transform: rotate(0deg) translateX(30px) rotate(0deg);
+        transform: rotate(0) translateX(20px) rotate(0);
     }
 
     to {
-        transform: rotate(360deg) translateX(30px) rotate(-360deg);
+        transform: rotate(360deg) translateX(20px) rotate(-360deg);
+    }
+}
+
+@keyframes orbit2 {
+    from {
+        transform: rotate(0) translateX(-30px) rotate(0);
+    }
+
+    to {
+        transform: rotate(360deg) translateX(-30px) rotate(-360deg);
+    }
+}
+
+@keyframes orbit3 {
+    from {
+        transform: rotate(0) translateY(40px) rotate(0);
+    }
+
+    to {
+        transform: rotate(360deg) translateY(40px) rotate(-360deg);
+    }
+}
+
+@keyframes orbit4 {
+    from {
+        transform: rotate(0) translateY(-15px) rotate(0);
+    }
+
+    to {
+        transform: rotate(360deg) translateY(-15px) rotate(-360deg);
     }
 }
 
@@ -180,16 +187,16 @@
 .line {
     position: absolute;
     width: 2px;
-    height: 120px;
+    height: 100px;
     background: linear-gradient(to bottom, transparent, var(--splash-speed-line), transparent);
-    animation: speedLine 0.6s linear infinite;
+    animation: speedLine 0.5s linear infinite;
 }
 
 [data-splash-theme='pearl'] .line {
+    animation-duration: 1.2s;
+    /* Slower, graceful lines in light mode */
     width: 1px;
-    height: 180px;
-    animation-duration: 1.5s;
-    background: linear-gradient(to bottom, transparent, rgba(108, 92, 231, 0.2), transparent);
+    height: 150px;
 }
 
 @keyframes speedLine {
@@ -208,32 +215,41 @@
     }
 }
 
-/* Glistening Sparkles for Stars */
+/* Stars */
 .star {
     position: absolute;
     background: var(--splash-text);
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--splash-text);
     animation: starTravel linear infinite;
 }
 
 [data-splash-theme='pearl'] .star {
-    background: #fff;
-    box-shadow: 0 0 15px rgba(108, 92, 231, 0.4);
-    animation: glisthen 4s infinite ease-in-out;
+    background: var(--splash-accent);
+    opacity: 0.2;
+    animation: drift 10s infinite ease-in-out;
 }
 
-@keyframes glisthen {
+@keyframes starTravel {
+    from {
+        transform: translateZ(0) translateY(-10vh);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateZ(500px) translateY(110vh);
+        opacity: 1;
+    }
+}
+
+@keyframes drift {
 
     0%,
     100% {
-        transform: scale(1);
-        opacity: 0.3;
+        transform: translate(0, 0);
     }
 
     50% {
-        transform: scale(1.5);
-        opacity: 0.7;
+        transform: translate(30px, 30px);
     }
 }
 
@@ -241,85 +257,268 @@
 .asset-item {
     position: absolute;
     color: var(--splash-text);
-    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
-    transition: color 1.5s ease;
+    opacity: 0.6;
+    animation: assetFloat 6s infinite ease-in-out;
 }
 
-[data-splash-theme='pearl'] .asset-item {
-    color: var(--splash-accent);
-    filter: drop-shadow(0 10px 15px rgba(108, 92, 231, 0.2));
+@keyframes assetFloat {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-20px) rotate(10deg);
+    }
+}
+
+.flask-1 {
+    top: 35%;
+    left: 8%;
+    font-size: 2rem;
+    color: #10b981;
+}
+
+.microscope-1 {
+    bottom: 35%;
+    right: 8%;
+    font-size: 2.2rem;
+    color: #6366f1;
+}
+
+.atom-1 {
+    top: 10%;
+    right: 35%;
+    font-size: 2.5rem;
+    color: #38bdf8;
+}
+
+.brain-1 {
+    top: 15%;
+    left: 45%;
+    font-size: 2.4rem;
+    color: #f43f5e;
+}
+
+.dna-1 {
+    bottom: 10%;
+    left: 15%;
+    font-size: 2rem;
+    color: #ec4899;
 }
 
 /* UFO Ship */
+.ufo-3d {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform-style: preserve-3d;
+}
+
 .ufo-icon {
-    font-size: 7rem;
+    font-size: 6.5rem;
     color: var(--ufo-color);
-    filter: drop-shadow(0 0 40px var(--splash-accent));
-    transition: all 1.5s ease;
+    filter: drop-shadow(var(--ufo-glow));
+    animation: ufoGlide 4s infinite ease-in-out;
 }
 
-[data-splash-theme='pearl'] .ufo-icon {
-    color: #ffffff;
-    filter: drop-shadow(0 20px 40px rgba(108, 92, 231, 0.4));
+@keyframes ufoGlide {
+
+    0%,
+    100% {
+        transform: rotateX(15deg) rotateY(-10deg);
+    }
+
+    50% {
+        transform: rotateX(-15deg) rotateY(10deg) translateY(-20px);
+    }
 }
 
-.ufo-beam {
-    background: linear-gradient(to bottom, var(--splash-accent), transparent);
-    opacity: 0.5;
-    transition: background 1.5s ease;
-}
-
-[data-splash-theme='pearl'] .ufo-beam {
-    background: linear-gradient(to bottom, #a29bfe, transparent);
+.ufo-energy-ring {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border: 2px solid var(--splash-accent);
+    border-radius: 50%;
+    transform: rotateX(80deg);
+    animation: spinRing 2s infinite linear;
     opacity: 0.3;
 }
 
-/* Brand UI */
-.brand-main {
-    font-family: 'Michroma', sans-serif;
-    color: var(--splash-text);
-    text-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+@keyframes spinRing {
+    to {
+        transform: rotateX(80deg) rotateZ(360deg);
+    }
 }
 
-[data-splash-theme='pearl'] .brand-main {
-    background: linear-gradient(to bottom, #2d3436, #636e72);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: none;
+.ufo-beam {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 200px;
+    background: linear-gradient(to bottom, var(--splash-accent), transparent);
+    clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+    filter: blur(8px);
+    opacity: 0.3;
+    animation: beamSync 0.2s infinite;
+}
+
+@keyframes beamSync {
+
+    0%,
+    100% {
+        opacity: 0.2;
+        transform: translateX(-50%) scaleX(0.9);
+    }
+
+    50% {
+        opacity: 0.4;
+        transform: translateX(-50%) scaleX(1.1);
+    }
+}
+
+/* Brand */
+.brand-gate {
+    position: absolute;
+    bottom: 20%;
+    text-align: center;
+    z-index: 10;
+}
+
+.brand-main {
+    font-family: 'Michroma', sans-serif;
+    font-size: 4rem;
+    color: var(--splash-text);
+    display: flex;
+    gap: 5px;
+}
+
+.letter-3d {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: reveal 0.8s forwards;
+}
+
+@keyframes reveal {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.creator-tag {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: var(--splash-text);
+    opacity: 0.5;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    font-weight: 800;
 }
 
 .creator-name {
     color: var(--splash-accent);
-    font-weight: 900;
 }
 
-/* HUD & Interface */
+/* HUD */
+.interface-hud {
+    position: absolute;
+    bottom: 80px;
+    width: 300px;
+    z-index: 10;
+}
+
 .loading-meter {
-    background: rgba(var(--splash-text), 0.05);
+    height: 4px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 20px;
 }
 
 [data-splash-theme='pearl'] .loading-meter {
-    background: rgba(108, 92, 231, 0.1);
+    background: rgba(79, 70, 229, 0.1);
 }
 
 .meter-fill {
+    height: 100%;
+    width: 30%;
     background: var(--splash-accent);
-    box-shadow: 0 0 15px var(--splash-accent);
+    animation: barMove 2s infinite alternate;
+}
+
+@keyframes barMove {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.enter-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 }
 
 .action-circle {
-    border-color: rgba(var(--splash-text), 0.1);
-    background: rgba(var(--splash-text), 0.02);
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    border: 2px solid var(--ui-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--splash-text);
+    transition: all 0.3s;
 }
 
-[data-splash-theme='pearl'] .action-circle {
-    background: #ffffff;
-    box-shadow: 0 10px 30px rgba(108, 92, 231, 0.1);
+.action-circle::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px solid var(--splash-accent);
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: rotateHUD 2s infinite linear;
 }
 
-/* Exit Style */
+@keyframes rotateHUD {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.action-text {
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--splash-text);
+    opacity: 0.6;
+}
+
+.vignan-identity {
+    position: absolute;
+    bottom: 30px;
+    font-size: 0.7rem;
+    color: var(--splash-text);
+    opacity: 0.4;
+    letter-spacing: 5px;
+}
+
+/* Exit */
 .exit-active {
-    background: #ffffff;
-    transition: all 1s ease;
+    opacity: 0;
+    transform: scale(1.1);
+    transition: 0.8s;
 }
