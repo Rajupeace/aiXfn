@@ -4,41 +4,42 @@ import { useNavigate } from 'react-router-dom';
 import {
   FaUniversity, FaSignOutAlt, FaEnvelope, FaLayerGroup, FaFileAlt, FaCog, FaRobot,
   FaRocket, FaTrash, FaEye, FaPlus, FaBullhorn, FaHistory, FaProjectDiagram,
-  FaFingerprint, FaUserCircle, FaSyncAlt, FaShieldAlt, FaCircleNotch
+  FaFingerprint, FaUserCircle, FaSyncAlt, FaShieldAlt, FaCircleNotch, FaClipboardList,
+  FaChalkboardTeacher, FaCheckCircle, FaExclamationCircle
 } from 'react-icons/fa';
 import './FacultyDashboard.css';
 import MaterialManager from './MaterialManager';
 import FacultyAnalytics from './FacultyAnalytics';
 import FacultyClassPulse from './FacultyClassPulse';
 import FacultySettings from './FacultySettings';
+import FacultyExamDashboard from './FacultyExamDashboard';
 import VuAiAgent from '../VuAiAgent/VuAiAgent';
 import { apiGet, apiDelete } from '../../utils/apiClient';
 
 const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => {
-  const [activeContext, setActiveContext] = useState(null);
-  const [selectedSections, setSelectedSections] = useState([]);
-  const [showSendModal, setShowSendModal] = useState(false);
-  const [msgTarget, setMsgTarget] = useState(null);
+  const [activeContext, setActiveContext] = useState(null); // null = Home, 'exams', 'settings', 'ai-agent', or Class Object
   const [messages, setMessages] = useState([]);
   const [materialsList, setMaterialsList] = useState([]);
   const [studentsList, setStudentsList] = useState([]);
-  const [showProfile, setShowProfile] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [bootSequence, setBootSequence] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const displayName = facultyData.name || 'Core Instructor';
-  const facultyToken = localStorage.getItem('facultyToken');
   const navigate = useNavigate();
 
+  // --- Data Logic ---
   const refreshAll = async () => {
     setSyncing(true);
     try {
-      const mats = await apiGet('/api/materials');
-      if (mats) setMaterialsList(mats);
+      const [mats, adminMsgs, studentsData] = await Promise.all([
+        apiGet('/api/materials'),
+        apiGet('/api/messages'),
+        apiGet(`/api/faculty-stats/${facultyData.facultyId}/students`)
+      ]);
 
-      const adminMsgs = await apiGet('/api/messages');
+      if (mats) setMaterialsList(mats);
       if (adminMsgs) {
-        // Filter for: Admin messages to Faculty/All OR messages sent BY this faculty
         const filteredMsgs = adminMsgs.filter(m =>
           m.target === 'all' ||
           m.target === 'faculty' ||
@@ -46,25 +47,19 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
         );
         setMessages(filteredMsgs.slice(0, 10));
       }
-
-      const studentsData = await apiGet(`/api/faculty-stats/${facultyData.facultyId}/students`);
       if (Array.isArray(studentsData)) setStudentsList(studentsData);
 
-      setTimeout(() => setSyncing(false), 800);
     } catch (e) {
-      console.error("Mesh Synchronization Failed", e);
-      setSyncing(false);
+      console.error("Sync Failed", e);
+    } finally {
+      setTimeout(() => setSyncing(false), 800);
     }
   };
 
   useEffect(() => {
     refreshAll();
-    const timer = setTimeout(() => setBootSequence(false), 1500);
-    const interval = setInterval(refreshAll, 30000); // 30s auto-refresh
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
+    const interval = setInterval(refreshAll, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const myClasses = useMemo(() => {
@@ -81,11 +76,21 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
   }, [facultyData.assignments]);
 
   const handleLogout = () => {
-    if (window.confirm('Initiate terminal shutdown and logout?')) {
+    if (window.confirm('End session and logout?')) {
       localStorage.clear();
       setIsAuthenticated(false);
       setIsFaculty(false);
       navigate('/');
+    }
+  };
+
+  const handleDeleteNode = async (id) => {
+    if (!window.confirm("Delete this material permanently?")) return;
+    try {
+      await apiDelete(`/api/materials/${id}`);
+      refreshAll();
+    } catch (err) {
+      alert("Error: " + err.message);
     }
   };
 
@@ -95,315 +100,231 @@ const FacultyDashboard = ({ facultyData, setIsAuthenticated, setIsFaculty }) => 
     return `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
-  const handleDeleteNode = async (id) => {
-    if (!window.confirm("Purge data node from central buffer?")) return;
-    try {
-      await apiDelete(`/api/materials/${id}`);
-      refreshAll();
-    } catch (err) {
-      alert("System Conflict: " + err.message);
-    }
-  };
+  // --- Render Functions ---
+  const renderSidebar = () => (
+    <aside className={`fd-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+      <div className="fd-brand">
+        <div className="fd-logo-icon"><FaRocket /></div>
+        <h2>Faculty<span style={{ color: 'var(--primary)' }}>Console</span></h2>
+      </div>
 
-  if (bootSequence) {
-    return (
-      <div className="faculty-dashboard-v2" style={{ justifyContent: 'center', alignItems: 'center', background: '#f8fafc' }}>
-        <div style={{ textAlign: 'center' }}>
-          <FaUserCircle style={{ fontSize: '4rem', color: 'var(--accent-primary)', animation: 'pulse 1s infinite' }} />
-          <h2 className="brand-shimmer" style={{ marginTop: '1.5rem' }}>Securing Faculty Console...</h2>
-          <div style={{ width: '200px', height: '3px', background: 'rgba(99, 102, 241, 0.1)', margin: '1rem auto', borderRadius: '10px', overflow: 'hidden' }}>
-            <div style={{ width: '60%', height: '100%', background: 'var(--accent-primary)', animation: 'meshFlow 2s infinite' }}></div>
+      <nav className="fd-nav">
+        <div
+          className={`fd-nav-item ${!activeContext ? 'active' : ''}`}
+          onClick={() => setActiveContext(null)}
+        >
+          <div className="fd-nav-icon"><FaUniversity /></div>
+          <span className="fd-nav-label">Dashboard Home</span>
+        </div>
+
+        <div className="fd-nav-section-title">Teaching Modules</div>
+        {myClasses.map((cls) => (
+          <div
+            key={cls.id}
+            className={`fd-nav-item ${activeContext?.id === cls.id ? 'active' : ''}`}
+            onClick={() => setActiveContext(cls)}
+          >
+            <div className="fd-nav-icon"><FaChalkboardTeacher /></div>
+            <span className="fd-nav-label">{cls.subject} <small style={{ opacity: 0.6 }}>({cls.sections.length})</small></span>
+          </div>
+        ))}
+
+        <div className="fd-nav-section-title">Tools</div>
+        <div className={`fd-nav-item ${activeContext === 'exams' ? 'active' : ''}`} onClick={() => setActiveContext('exams')}>
+          <div className="fd-nav-icon"><FaClipboardList /></div>
+          <span className="fd-nav-label">Exam Manager</span>
+        </div>
+        <div className={`fd-nav-item ${activeContext === 'ai-agent' ? 'active' : ''}`} onClick={() => setActiveContext('ai-agent')}>
+          <div className="fd-nav-icon"><FaRobot /></div>
+          <span className="fd-nav-label">AI Assistant</span>
+        </div>
+        <div className={`fd-nav-item ${activeContext === 'settings' ? 'active' : ''}`} onClick={() => setActiveContext('settings')}>
+          <div className="fd-nav-icon"><FaCog /></div>
+          <span className="fd-nav-label">Settings</span>
+        </div>
+      </nav>
+
+      <div className="fd-footer">
+        <button className="fd-logout-btn" onClick={handleLogout}>
+          <FaSignOutAlt /> {!sidebarCollapsed && 'Sign Out'}
+        </button>
+      </div>
+    </aside>
+  );
+
+  const renderHome = () => (
+    <div className="animate-fade-in">
+      <div className="fd-hero">
+        <h1>Welcome back, Prof. {displayName.split(' ')[0]}</h1>
+        <p>
+          You are managing {myClasses.length} active subjects across {myClasses.reduce((acc, c) => acc + c.sections.length, 0)} sections.
+          System status is nominal.
+        </p>
+        <div className="fd-quick-actions">
+          <button className="fd-btn primary" onClick={() => myClasses[0] && setActiveContext(myClasses[0])}>
+            <FaPlus /> Deploy Material
+          </button>
+          <button className="fd-btn secondary" onClick={() => setActiveContext('exams')}>
+            <FaClipboardList /> Manage Exams
+          </button>
+        </div>
+      </div>
+
+      <div className="fd-stats-grid">
+        <div className="fd-stat-card">
+          <div className="fd-stat-icon" style={{ background: '#e0e7ff', color: 'var(--primary)' }}><FaUserCircle /></div>
+          <div className="fd-stat-info">
+            <h3>{studentsList.length}</h3>
+            <p>Total Students</p>
+          </div>
+        </div>
+        <div className="fd-stat-card">
+          <div className="fd-stat-icon" style={{ background: '#dbeafe', color: 'var(--accent)' }}><FaFileAlt /></div>
+          <div className="fd-stat-info">
+            <h3>{materialsList.filter(m => m.uploadedBy === facultyData.facultyId || m.uploadedBy === 'faculty').length}</h3>
+            <p>Materials Live</p>
+          </div>
+        </div>
+        <div className="fd-stat-card">
+          <div className="fd-stat-icon" style={{ background: '#fce7f3', color: 'var(--secondary)' }}><FaBullhorn /></div>
+          <div className="fd-stat-info">
+            <h3>{messages.length}</h3>
+            <p>Active Notices</p>
           </div>
         </div>
       </div>
-    );
-  }
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        {/* Recent Activity */}
+        <div className="fd-card">
+          <h3><FaHistory style={{ color: 'var(--text-muted)' }} /> Recent Deployments</h3>
+          {materialsList.slice(0, 5).map(m => (
+            <div key={m.id || m._id} className="fd-list-item">
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <div className="fd-nav-icon" style={{ background: 'white', borderRadius: '8px', width: '40px', height: '40px' }}>
+                  {m.type === 'videos' ? <FaLayerGroup /> : <FaFileAlt />}
+                </div>
+                <div>
+                  <div style={{ fontWeight: '700' }}>{m.title}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{m.subject} • {new Date(m.createdAt || m.uploadedAt).toLocaleDateString()}</div>
+                </div>
+              </div>
+              <a href={getFileUrl(m.url)} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}><FaEye /></a>
+            </div>
+          ))}
+          {materialsList.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No recent activity.</p>}
+        </div>
+
+        {/* Notices */}
+        <div className="fd-card">
+          <h3><FaEnvelope style={{ color: 'var(--text-muted)' }} /> Tactical Transmissions</h3>
+          {messages.map(msg => (
+            <div key={msg.id} style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                <span>{msg.facultyId === facultyData.facultyId ? 'YOU ' : (msg.sender || 'ADMIN')}</span>
+                <span>{new Date(msg.createdAt || msg.date).toLocaleDateString()}</span>
+              </div>
+              <div style={{ fontSize: '0.95rem', fontWeight: '500' }}>{msg.message || msg.text}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderClassView = () => (
+    <div className="animate-fade-in">
+      <div className="fd-card" style={{ borderLeft: '4px solid var(--primary)' }}>
+        <h2 style={{ margin: 0, fontFamily: 'var(--font-head)' }}>Module: {activeContext.subject}</h2>
+        <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0' }}>Year {activeContext.year} • Sections {activeContext.sections.join(', ')}</p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
+        <div className="fd-card">
+          <h3 style={{ marginBottom: '2rem' }}>Upload & Manage Materials</h3>
+          <MaterialManager
+            selectedSubject={`${activeContext.subject} - Year ${activeContext.year}`}
+            selectedSections={activeContext.sections}
+            onUploadSuccess={refreshAll}
+          />
+        </div>
+
+        <div className="fd-card">
+          <h3>Existing Nodes ({materialsList.filter(m => String(m.year) === String(activeContext.year) && m.subject.includes(activeContext.subject)).length})</h3>
+          <div className="glass-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', display: 'grid', gap: '1rem' }}>
+            {materialsList.filter(m => String(m.year) === String(activeContext.year) && m.subject.includes(activeContext.subject)).map(node => (
+              <div key={node.id || node._id} className="fd-list-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                  <div style={{ fontWeight: '700' }}>{node.title}</div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <a href={getFileUrl(node.url)} target="_blank" rel="noreferrer"><FaEye color="var(--primary)" /></a>
+                    <FaTrash color="var(--danger)" style={{ cursor: 'pointer' }} onClick={() => handleDeleteNode(node.id || node._id)} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.8rem', display: 'flex', gap: '0.5rem' }}>
+                  <span style={{ background: '#e0e7ff', color: 'var(--primary)', padding: '2px 8px', borderRadius: '6px', fontWeight: '700', fontSize: '0.7rem' }}>{node.type.toUpperCase()}</span>
+                  {node.unit && <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '6px', fontSize: '0.7rem' }}>Unit {node.unit}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="faculty-dashboard-v2">
-      {/* CYBER SIDEBAR */}
-      <aside className="sidebar-v2">
-        <div className="sidebar-header-v2" style={{ padding: '2.5rem 1.8rem' }}>
-          <div className="icon-box" style={{ background: 'var(--accent-primary)', color: 'white', margin: '0 0 1rem', width: '42px', height: '42px' }}>
-            <FaRocket />
+    <div className="fd-container">
+      {renderSidebar()}
+
+      <main className="fd-main">
+        <header className="fd-header">
+          <div className="fd-header-actions">
+            <button className="fd-sync-btn" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
+              Menu
+            </button>
           </div>
-          <h2 className="brand-shimmer">friendlyNotebook</h2>
-          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, letterSpacing: '1px', opacity: 0.8 }}>FACULTY CONSOLE V2.0</p>
-        </div>
 
-        <nav style={{ flex: 1, overflowY: 'auto' }}>
-          <button className={`nav-link-v2 ${!activeContext ? 'active' : ''}`} onClick={() => setActiveContext(null)}>
-            <div className="icon-box"><FaUniversity /></div>
-            <span>Dashboard Home</span>
-          </button>
+          <div className="fd-header-title">
+            <h1>{activeContext?.subject || (activeContext === 'exams' ? 'Exam Manager' : activeContext === 'settings' ? 'Settings' : 'Faculty Dashboard')}</h1>
+          </div>
 
-          <button className={`nav-link-v2 ${activeContext === 'ai-agent' ? 'active' : ''}`} onClick={() => setActiveContext('ai-agent')}>
-            <div className="icon-box"><FaRobot /></div>
-            <span>AI Assistant</span>
-          </button>
-
-          <div style={{ padding: '2rem 1.8rem 0.8rem', fontSize: '0.65rem', fontWeight: 900, color: 'var(--text-muted)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Teaching Sections</div>
-          {myClasses.map((cls) => {
-            const subjectStudents = studentsList.filter(s =>
-              String(s.year) === String(cls.year) &&
-              cls.sections.some(sec => String(sec).toUpperCase() === String(s.section).toUpperCase())
-            ).length;
-
-            return (
-              <button key={cls.id} className={`nav-link-v2 ${activeContext?.id === cls.id ? 'active' : ''}`} onClick={() => setActiveContext(cls)}>
-                <div className="icon-box"><FaProjectDiagram /></div>
-                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: activeContext?.id === cls.id ? 'var(--accent-primary)' : 'inherit' }}>{cls.subject}</span>
-                  <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{cls.sections.length} Sections • {subjectStudents} Students</span>
-                </div>
-              </button>
-            );
-          })}
-
-          <button className={`nav-link-v2 ${activeContext === 'settings' ? 'active' : ''}`} onClick={() => setActiveContext('settings')} style={{ marginTop: '2rem' }}>
-            <div className="icon-box"><FaCog /></div>
-            <span>Settings</span>
-          </button>
-        </nav>
-
-        <div style={{ padding: '1.2rem', borderTop: '1px solid var(--pearl-border)' }}>
-          <button className="nav-link-v2" onClick={handleLogout} style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.05)', margin: 0, width: '100%', borderRadius: '16px' }}>
-            <FaSignOutAlt />
-            <span>Terminate Access</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* MAIN CONTENT STAGE */}
-      <main className="main-stage">
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-            <div className="icon-box" style={{ background: 'linear-gradient(135deg, #0ea5e9, #22d3ee)', color: 'white' }}><FaShieldAlt /></div>
-            <div>
-              <div style={{ fontSize: '0.7rem', color: '#0ea5e9', fontWeight: 900, letterSpacing: '1.5px' }}>SECURE FACULTY NODE</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.5px' }}>{activeContext ? activeContext.subject : 'Main Systems Aggregate'}</div>
+          <div className="fd-header-actions">
+            <button className="fd-sync-btn" onClick={refreshAll}>
+              {syncing ? <FaSyncAlt className="spin-fast" /> : <FaSyncAlt />} {syncing ? 'Syncing...' : 'Sync'}
+            </button>
+            <div className="fd-user-profile" onClick={() => setShowProfile(!showProfile)}>
+              <div className="fd-avatar">{displayName[0]}</div>
+              <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{displayName.split(' ')[0]}</span>
             </div>
           </div>
-
-          <button className="cyber-btn primary" onClick={refreshAll} style={{ padding: '0.7rem 1.5rem', fontSize: '0.85rem' }}>
-            {syncing ? <FaSyncAlt className="spin-fast" /> : <FaSyncAlt />}
-            {syncing ? 'SYNCING DATA...' : 'REFRESH DATABASE'}
-          </button>
         </header>
 
-        {activeContext === 'ai-agent' ? (
-          <div className="glass-card animate-fade-in" style={{ height: 'calc(100% - 100px)', padding: 0, overflow: 'hidden', border: '1px solid var(--cyber-cyan)' }}>
-            <VuAiAgent />
-          </div>
-        ) : activeContext === 'settings' ? (
-          <div className="animate-fade-in"><FacultySettings facultyData={facultyData} /></div>
-        ) : (
-          <div className="animate-fade-in">
-            {/* LARGE HERO SECTION */}
-            <section className="hero-banner">
-              <div style={{ position: 'relative', zIndex: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.6rem',
-                    padding: '0.5rem 1rem',
-                    background: 'rgba(16, 185, 129, 0.08)',
-                    borderRadius: '50px',
-                    border: '1px solid rgba(16, 185, 129, 0.2)',
-                    color: '#059669',
-                    fontSize: '0.7rem',
-                    fontWeight: 900,
-                    letterSpacing: '1px'
-                  }}>
-                    <div style={{
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      background: '#10b981',
-                      boxShadow: '0 0 10px #10b981',
-                      animation: 'pulse 2s infinite'
-                    }}></div>
-                    SYSTEM SECURE
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.6rem',
-                    padding: '0.5rem 1rem',
-                    background: 'rgba(99, 102, 241, 0.08)',
-                    borderRadius: '50px',
-                    border: '1px solid rgba(99, 102, 241, 0.2)',
-                    color: 'var(--accent-primary)',
-                    fontSize: '0.7rem',
-                    fontWeight: 900,
-                    letterSpacing: '1px'
-                  }}>
-                    <FaSyncAlt className={syncing ? 'spin-fast' : ''} style={{ fontSize: '0.8rem' }} />
-                    {syncing ? 'DATA SYNC ACTIVE' : 'MESH SYNCHRONIZED'}
-                  </div>
-                </div>
-                <h1>Welcome back,<br />Prof. {displayName}</h1>
-                <p style={{ fontSize: '1.2rem', color: 'var(--text-dim)', maxWidth: '600px', marginTop: '1.5rem' }}>
-                  {activeContext ? `Managing deployment for ${activeContext.subject}. All nodes synchronized across ${activeContext.sections.join(', ')} sections.` : 'Global dashboard active. Overviewing material deployment, student affinity, and system transmissions.'}
-                </p>
-
-                <div style={{ display: 'flex', gap: '1.5rem', marginTop: '3.5rem' }}>
-                  <div className="cyber-btn primary" onClick={() => setActiveContext(myClasses[0])} style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', padding: '1.2rem 2.8rem' }}>
-                    <FaPlus /> Deploy Node Material
-                  </div>
-                  <div className="cyber-btn" style={{ background: 'white', color: 'var(--text-main)', border: '1px solid var(--pearl-border)', padding: '1.2rem 2.8rem' }} onClick={() => setShowProfile(true)}>
-                    <FaUserCircle style={{ color: 'var(--accent-vibrant)' }} /> My Identity Mesh
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {!activeContext ? (
-              <div className="dashboard-v2-grid">
-                <FacultyClassPulse
-                  studentsCount={studentsList.length}
-                  materialsCount={materialsList.length}
-                />
-                <FacultyAnalytics myClasses={myClasses} materialsList={materialsList} facultyId={facultyData.facultyId} />
-
-                <div className="glass-grid" style={{ marginTop: '2.5rem' }}>
-                  {/* SYSTEM INTEL / NEW FEATURES */}
-                  <div className="glass-card" style={{ borderLeft: '6px solid var(--accent-secondary)', background: 'linear-gradient(135deg, white 0%, rgba(168, 85, 247, 0.05) 100%)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                      <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1.1rem' }}><FaShieldAlt color="var(--accent-secondary)" /> System Intelligence</h3>
-                      <span style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--accent-secondary)', background: 'rgba(168, 85, 247, 0.1)', padding: '0.3rem 0.6rem', borderRadius: '8px' }}>FACULTY ONLY</span>
-                    </div>
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--pearl-border)', boxShadow: 'var(--soft-shadow)' }}>
-                      <div style={{ fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.5rem' }}>Update: Version 2.0 Terminal Active</div>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                        The new Faculty Broadcast system is now online. You can now dispatch urgent messages directly to your sections via the Deployment Hub.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* ACTIVITY FEED */}
-                  <div className="glass-card" style={{ borderLeft: '6px solid var(--accent-primary)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-                      <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1.2rem' }}><FaHistory color="var(--accent-primary)" /> Deployment Logs</h3>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {materialsList.slice(0, 5).map((m, i) => (
-                        <div key={m.id || m._id} className="feed-item" style={{ padding: '1.2rem', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '1.2rem', background: '#f8fafc', border: '1px solid var(--pearl-border)' }}>
-                          <div className="icon-box" style={{ background: 'white', color: 'var(--accent-primary)', border: '1px solid var(--pearl-border)' }}>
-                            {m.type === 'videos' ? <FaLayerGroup /> : <FaFileAlt />}
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>{m.title}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>{m.subject} • {new Date(m.createdAt || m.uploadedAt).toLocaleDateString()}</div>
-                          </div>
-                          <a href={getFileUrl(m.url)} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-primary)', fontSize: '1.1rem' }}><FaEye /></a>
-                        </div>
-                      ))}
-                      {materialsList.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No recent deployments detected.</p>}
-                    </div>
-                  </div>
-
-                  {/* TRANSMISSIONS */}
-                  <div className="glass-card" style={{ borderLeft: '6px solid #f43f5e' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-                      <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1.2rem' }}><FaBullhorn color="#f43f5e" /> Tactical Transmissions</h3>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                      {messages.map((msg, i) => (
-                        <div key={msg.id} style={{ borderLeft: '3px solid #f43f5e', paddingLeft: '1.5rem', position: 'relative' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                            <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#f43f5e', textTransform: 'uppercase' }}>
-                              {msg.facultyId === facultyData.facultyId ? 'SENT BY YOU' : (msg.sender || 'ADMIN CENTER')}
-                            </div>
-                            {msg.type && (
-                              <span style={{
-                                fontSize: '0.6rem',
-                                fontWeight: 900,
-                                background: 'rgba(244, 63, 94, 0.1)',
-                                color: '#f43f5e',
-                                padding: '0.2rem 0.5rem',
-                                borderRadius: '4px',
-                                textTransform: 'uppercase'
-                              }}>
-                                {msg.type}
-                              </span>
-                            )}
-                          </div>
-                          <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.5', color: 'var(--text-main)', fontWeight: 600 }}>{msg.message || msg.text}</p>
-                          <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                            {new Date(msg.createdAt || msg.date).toLocaleString()}
-                            {msg.sections && ` • To Section: ${msg.sections.join(', ')}`}
-                          </div>
-                        </div>
-                      ))}
-                      {messages.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No active transmissions.</p>}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="animate-fade-in">
-                <div className="glass-card" style={{ marginBottom: '2.5rem', background: 'var(--nebula-glow)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <MaterialManager
-                    selectedSubject={`${activeContext.subject} - Year ${activeContext.year}`}
-                    selectedSections={activeContext.sections}
-                    onUploadSuccess={refreshAll}
-                  />
-                </div>
-
-                <div className="glass-card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-                    <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '1rem' }}><FaLayerGroup color="var(--cyber-cyan)" /> Managed Node Data</h2>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 800, opacity: 0.4 }}>YEAR {activeContext.year} AGGREGATE</span>
-                      <div style={{ padding: '0.4rem 1rem', background: 'rgba(34, 211, 238, 0.1)', color: 'var(--cyber-cyan)', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 900 }}>{materialsList.filter(m => String(m.year) === String(activeContext.year) && m.subject.includes(activeContext.subject)).length} NODES</div>
-                    </div>
-                  </div>
-
-                  <div className="glass-grid">
-                    {materialsList.filter(m => String(m.year) === String(activeContext.year) && m.subject.includes(activeContext.subject)).map(node => (
-                      <div key={node.id || node._id} className="glass-card" style={{ padding: '2rem', background: '#f8fafc', border: '1px solid var(--pearl-border)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                          <div className="icon-box" style={{ background: 'white', color: 'var(--accent-primary)' }}>
-                            {node.type === 'videos' ? <FaLayerGroup /> : <FaFileAlt />}
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.6rem' }}>
-                            <a href={getFileUrl(node.url)} target="_blank" rel="noreferrer" className="icon-box" style={{ width: '36px', height: '36px', background: 'white' }}><FaEye /></a>
-                            <button onClick={() => handleDeleteNode(node.id || node._id)} className="icon-box" style={{ width: '36px', height: '36px', color: '#ef4444', border: 'none', background: 'rgba(239, 68, 68, 0.05)', cursor: 'pointer' }}><FaTrash /></button>
-                          </div>
-                        </div>
-                        <h4 style={{ margin: '0 0 0.8rem', fontSize: '1.1rem', color: 'var(--text-main)' }}>{node.title}</h4>
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.65rem', padding: '0.3rem 0.6rem', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.08)', color: 'var(--accent-primary)', fontWeight: 800 }}>{node.type.toUpperCase()}</span>
-                          <span style={{ fontSize: '0.65rem', padding: '0.3rem 0.6rem', borderRadius: '8px', background: '#f1f5f9', color: 'var(--text-muted)', fontWeight: 800 }}>U{node.unit || 1}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        <div className="fd-content-scroll">
+          {!activeContext && renderHome()}
+          {activeContext === 'exams' && <div className="animate-fade-in"><FacultyExamDashboard /></div>}
+          {activeContext === 'ai-agent' && <div className="animate-fade-in" style={{ height: '100%' }}><VuAiAgent /></div>}
+          {activeContext === 'settings' && <div className="animate-fade-in"><FacultySettings facultyData={facultyData} /></div>}
+          {typeof activeContext === 'object' && activeContext !== null && renderClassView()}
+        </div>
       </main>
 
-      {/* IDENTITY MODAL */}
+      {/* Profile Modal */}
       {showProfile && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div className="glass-card animate-fade-in" style={{ width: '400px', textAlign: 'center', padding: '4rem' }} onClick={e => e.stopPropagation()}>
-            <div style={{ width: '120px', height: '120px', borderRadius: '40px', background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', margin: '0 auto 2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '3.5rem', fontWeight: 800, boxShadow: '0 10px 30px rgba(99, 102, 241, 0.3)' }}>
-              {displayName[0]}
-            </div>
-            <h1 style={{ margin: 0, fontSize: '1.8rem', color: 'var(--text-main)' }}>{displayName}</h1>
-            <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 800, letterSpacing: '1px', marginTop: '0.6rem' }}>ACADEMIC PROFESSOR</div>
+          <div className="fd-card animate-fade-in" style={{ width: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div className="fd-avatar" style={{ width: '80px', height: '80px', fontSize: '2rem', margin: '0 auto 1.5rem' }}>{displayName[0]}</div>
+            <h2 style={{ margin: 0, fontFamily: 'var(--font-head)' }}>{displayName}</h2>
+            <p style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '0.9rem' }}>FACULTY MEMBER</p>
 
-            <div style={{ marginTop: '2.5rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '20px', textAlign: 'left', border: '1px solid var(--pearl-border)' }}>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.5rem' }}>FACULTY BRANCH</div>
-              <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{facultyData.department || 'CORE DEPARTMENT'}</div>
+            <div style={{ textAlign: 'left', background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', margin: '2rem 0' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>DEPARTMENT</div>
+              <div style={{ fontWeight: '700' }}>{facultyData.department || 'General'}</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem', marginTop: '1rem' }}>EMAIL</div>
+              <div style={{ fontWeight: '700' }}>{facultyData.email}</div>
             </div>
 
-            <button className="cyber-btn primary" style={{ width: '100%', marginTop: '2.5rem', justifyContent: 'center' }} onClick={() => setShowProfile(false)}>Close Interface</button>
+            <button className="fd-btn primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowProfile(false)}>Close Profile</button>
           </div>
         </div>
       )}

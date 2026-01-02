@@ -22,7 +22,7 @@ const MaterialManager = ({ selectedSubject, selectedSections, onUploadSuccess })
         if (selectedSubject && selectedSections.length > 0) {
             fetchGlobalResources();
         }
-    }, [selectedSubject, selectedSections]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [selectedSubject, selectedSections]);
 
     const fetchGlobalResources = async () => {
         if (!selectedSubject) return;
@@ -56,13 +56,13 @@ const MaterialManager = ({ selectedSubject, selectedSections, onUploadSuccess })
 
     const handleUpload = async () => {
         if (selectedSections.length === 0) {
-            alert('Mesh Alert: Select at least one active section target.');
+            alert('Alert: Select at least one active section target.');
             return;
         }
 
         const { subject, year } = getContext();
         const file = materials[uploadType];
-        if (!file) return alert('Input Required: No data node selected for upload.');
+        if (!file) return alert('Input Required: No file selected.');
 
         const module = document.getElementById(`mod-${uploadType}`)?.value || '1';
         const unit = document.getElementById(`uni-${uploadType}`)?.value || '1';
@@ -87,78 +87,36 @@ const MaterialManager = ({ selectedSubject, selectedSections, onUploadSuccess })
                 }
                 await apiUpload('/api/materials', formData);
             }
-            alert('✅ Deployment Successful: Content synced to mesh.');
+            alert('✅ Upload Successful');
             setMaterials(prev => ({ ...prev, [uploadType]: null }));
             if (onUploadSuccess) onUploadSuccess();
             fetchGlobalResources();
         } catch (error) {
-            alert(`Deployment Failed: ${error.message}`);
-        }
-    };
-
-    const handleLinkAdd = async () => {
-        const title = document.getElementById('link-title').value;
-        const url = document.getElementById('link-url').value;
-        const type = document.getElementById('link-type').value;
-
-        if (!title || !url) return alert('Input Required: Title and URL missing.');
-        const { subject, year } = getContext();
-
-        try {
-            for (const section of selectedSections) {
-                const formData = new FormData();
-                formData.append('title', title);
-                formData.append('year', year);
-                formData.append('section', section);
-                formData.append('subject', subject);
-                formData.append('type', type);
-                formData.append('link', url);
-                formData.append('module', '1');
-                formData.append('unit', '1');
-                formData.append('topic', 'Cloud Resource');
-                await apiUpload('/api/materials', formData);
-            }
-            alert('✅ Cloud Link Synced');
-            document.getElementById('link-title').value = '';
-            document.getElementById('link-url').value = '';
-            if (onUploadSuccess) onUploadSuccess();
-            fetchGlobalResources();
-        } catch (error) {
-            alert('Cloud Sync Failed.');
+            alert(`Upload Failed: ${error.message}`);
         }
     };
 
     return (
-        <div className="deployment-hub animate-fade-in">
-            <div className="hub-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-                    <div className="icon-box" style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', color: 'white', width: '48px', height: '48px', fontSize: '1.4rem' }}><FaLayerGroup /></div>
-                    <div>
-                        <h2 style={{ margin: 0 }}>Content Deployment Hub</h2>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 900, letterSpacing: '1px', marginTop: '0.2rem' }}>CENTRAL NODE DISPATCH E-SYSTEM</div>
-                    </div>
-                </div>
-
-                <div className="quantum-tabs">
-                    <button className={`quantum-tab-btn ${activeTab === 'upload' ? 'active' : ''}`} onClick={() => setActiveTab('upload')}>
-                        <FaCloudUploadAlt /> DEPLOYMENT
-                    </button>
-                    <button className={`quantum-tab-btn ${activeTab === 'links' ? 'active' : ''}`} onClick={() => setActiveTab('links')}>
-                        <FaLink /> LINKS
-                    </button>
-                    <button className={`quantum-tab-btn ${activeTab === 'broadcast' ? 'active' : ''}`} onClick={() => setActiveTab('broadcast')}>
-                        <FaPaperPlane /> BROADCAST
-                    </button>
-                    <button className={`quantum-tab-btn ${activeTab === 'resources' ? 'active' : ''}`} onClick={() => setActiveTab('resources')}>
-                        <FaHistory /> REGISTRY
-                    </button>
-                </div>
+        <div className="animate-fade-in">
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0' }}>
+                <button className={`fd-btn ${activeTab === 'upload' ? 'primary' : 'secondary'}`} onClick={() => setActiveTab('upload')}>
+                    <FaCloudUploadAlt /> New Upload
+                </button>
+                <button className={`fd-btn ${activeTab === 'links' ? 'primary' : 'secondary'}`} onClick={() => setActiveTab('links')}>
+                    <FaLink /> Links
+                </button>
+                <button className={`fd-btn ${activeTab === 'broadcast' ? 'primary' : 'secondary'}`} onClick={() => setActiveTab('broadcast')}>
+                    <FaPaperPlane /> Broadcast
+                </button>
+                <button className={`fd-btn ${activeTab === 'resources' ? 'primary' : 'secondary'}`} onClick={() => setActiveTab('resources')}>
+                    <FaHistory /> History
+                </button>
             </div>
 
-            <div className="hub-stage">
+            <div>
                 {activeTab === 'upload' && (
-                    <div className="upload-nexus animate-fade-in">
-                        <div className="type-nexus-grid">
+                    <div className="animate-fade-in">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
                             {[
                                 { id: 'notes', label: 'Notes', icon: <FaFileAlt /> },
                                 { id: 'videos', label: 'Video', icon: <FaVideo /> },
@@ -166,167 +124,147 @@ const MaterialManager = ({ selectedSubject, selectedSections, onUploadSuccess })
                                 { id: 'modelPapers', label: 'Paper', icon: <FaLayerGroup /> },
                                 { id: 'importantQuestions', label: 'Q&A', icon: <FaQuestionCircle /> }
                             ].map(t => (
-                                <button key={t.id} className={`nexus-card ${uploadType === t.id ? 'active' : ''}`} onClick={() => setUploadType(t.id)}>
-                                    <div className="nexus-icon">{t.icon}</div>
-                                    <span>{t.label}</span>
+                                <button
+                                    key={t.id}
+                                    className={`fd-stat-card ${uploadType === t.id ? 'active' : ''}`}
+                                    onClick={() => setUploadType(t.id)}
+                                    style={{
+                                        cursor: 'pointer',
+                                        border: uploadType === t.id ? '2px solid var(--primary)' : '1px solid #e2e8f0',
+                                        flexDirection: 'column', // override stat card default
+                                        gap: '0.5rem',
+                                        justifyContent: 'center',
+                                        textAlign: 'center',
+                                        boxShadow: uploadType === t.id ? '0 10px 20px rgba(139, 92, 246, 0.1)' : 'none'
+                                    }}
+                                >
+                                    <div style={{ fontSize: '1.5rem', color: uploadType === t.id ? 'var(--primary)' : 'var(--text-muted)' }}>{t.icon}</div>
+                                    <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{t.label}</span>
                                 </button>
                             ))}
                         </div>
 
-                        <div className="nexus-dropzone" onClick={() => document.getElementById(uploadType).click()} style={{ position: 'relative', overflow: 'hidden' }}>
-                            <div style={{ position: 'absolute', inset: 0, opacity: 0.03, background: 'var(--accent-primary)', pointerEvents: 'none' }}></div>
-                            <input
-                                type="file"
-                                id={uploadType}
-                                name={uploadType}
-                                style={{ display: 'none' }}
-                                onChange={handleFileChange}
-                                accept={uploadType === 'videos' ? 'video/*' : '.pdf,.doc,.docx,.txt'}
-                            />
-                            <div className="drop-status">
-                                {materials[uploadType] ?
-                                    <div style={{ color: '#10b981', filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.3))' }}><FaCloudUploadAlt /></div> :
-                                    <div style={{ opacity: 0.1, color: 'var(--text-main)' }}><FaCloudUploadAlt /></div>
-                                }
+                        <div onClick={() => document.getElementById(uploadType).click()} style={{
+                            border: '2px dashed #cbd5e1',
+                            borderRadius: '24px',
+                            padding: '3rem',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            background: materials[uploadType] ? '#f0fdf4' : '#f8fafc',
+                            transition: 'all 0.2s'
+                        }}>
+                            <input type="file" id={uploadType} name={uploadType} style={{ display: 'none' }} onChange={handleFileChange} accept={uploadType === 'videos' ? 'video/*' : '.pdf,.doc,.docx,.txt'} />
+                            <div style={{ fontSize: '3rem', color: materials[uploadType] ? '#10b981' : '#cbd5e1', marginBottom: '1rem' }}>
+                                <FaCloudUploadAlt />
                             </div>
-                            <h3>{materials[uploadType] ? materials[uploadType].name : `SELECT ${uploadType.toUpperCase()} PAYLOAD`}</h3>
-                            <p style={{ fontWeight: 600, color: 'var(--text-muted)' }}>{materials[uploadType] ? 'NODE DATA VERIFIED' : 'SUPPORTED PROTOCOLS: PDF, DOCX, MP4'}</p>
+                            <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>
+                                {materials[uploadType] ? materials[uploadType].name : `Select ${uploadType.toUpperCase()} file`}
+                            </h3>
+                            <p style={{ color: 'var(--text-secondary)' }}>Click to browse or drag file here</p>
                         </div>
 
-                        <div className="nexus-form-grid">
-                            <div className="nexus-group">
-                                <label>Target Module</label>
-                                <select id={`mod-${uploadType}`} className="cyber-input">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '2rem' }}>
+                            <div>
+                                <label style={labelStyle}>Module</label>
+                                <select id={`mod-${uploadType}`} style={inputStyle}>
                                     {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>Module {n}</option>)}
                                 </select>
                             </div>
-                            <div className="nexus-group">
-                                <label>Target Unit</label>
-                                <select id={`uni-${uploadType}`} className="cyber-input">
+                            <div>
+                                <label style={labelStyle}>Unit</label>
+                                <select id={`uni-${uploadType}`} style={inputStyle}>
                                     {[1, 2, 3, 4].map(n => <option key={n} value={n}>Unit {n}</option>)}
                                 </select>
                             </div>
-                            <div className="nexus-group full">
-                                <label>Topic Identifier</label>
-                                <input id={`top-${uploadType}`} placeholder="e.g. Distributed Ledger Technology" className="cyber-input" />
+                            <div style={{ gridColumn: 'span 2' }}>
+                                <label style={labelStyle}>Topic Name</label>
+                                <input id={`top-${uploadType}`} placeholder="e.g. Intro to Logic" style={inputStyle} />
                             </div>
 
                             {uploadType === 'assignments' && (
-                                <div className="nexus-group full" style={{ marginTop: '1rem', borderTop: '1px solid #f1f5f9', paddingTop: '1rem' }}>
-                                    <label><FaCalendarAlt /> Deadlines & Procedures</label>
-                                    <input type="datetime-local" className="cyber-input" value={assignmentDetails.dueDate} onChange={(e) => setAssignmentDetails({ ...assignmentDetails, dueDate: e.target.value })} style={{ marginBottom: '1rem' }} />
-                                    <textarea className="cyber-input" placeholder="Enter instructional protocols..." rows="3" value={assignmentDetails.message} onChange={(e) => setAssignmentDetails({ ...assignmentDetails, message: e.target.value })} />
+                                <div style={{ gridColumn: 'span 2', background: '#fff7ed', padding: '1.5rem', borderRadius: '12px' }}>
+                                    <label style={labelStyle}><FaCalendarAlt /> Due Date</label>
+                                    <input type="datetime-local" style={inputStyle} value={assignmentDetails.dueDate} onChange={(e) => setAssignmentDetails({ ...assignmentDetails, dueDate: e.target.value })} />
+                                    <div style={{ marginTop: '1rem' }}></div>
+                                    <label style={labelStyle}>Instructions</label>
+                                    <textarea style={inputStyle} placeholder="Instructions..." rows="3" value={assignmentDetails.message} onChange={(e) => setAssignmentDetails({ ...assignmentDetails, message: e.target.value })} />
                                 </div>
                             )}
                         </div>
 
-                        <button className="cyber-btn primary" style={{ width: '100%', marginTop: '2rem', justifyContent: 'center' }} onClick={handleUpload}>
-                            <FaPaperPlane /> Initiate Deployment to {selectedSections.length} Nodes
-                        </button>
-                    </div>
-                )}
-                {activeTab === 'links' && (
-                    <div className="upload-nexus animate-fade-in" style={{ background: '#f8fafc', padding: '3rem', borderRadius: '32px' }}>
-                        <div className="nexus-form-grid">
-                            <div className="nexus-group full">
-                                <label style={{ color: 'var(--accent-primary)' }}>Resource Label</label>
-                                <input id="link-title" placeholder="e.g. Cloud API Documentation" className="cyber-input" style={{ background: 'white' }} />
-                            </div>
-                            <div className="nexus-group full">
-                                <label style={{ color: 'var(--accent-secondary)' }}>Target Cloud URL</label>
-                                <input id="link-url" placeholder="https://" className="cyber-input" style={{ background: 'white' }} />
-                            </div>
-                            <div className="nexus-group">
-                                <label>Internal Mapping Type</label>
-                                <select id="link-type" className="cyber-input" style={{ background: 'white' }}>
-                                    <option value="videos">Video Stream</option>
-                                    <option value="notes">Data Notes</option>
-                                    <option value="syllabus">Syllabus Node</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button className="cyber-btn primary" style={{ width: '100%', marginTop: '2.5rem', justifyContent: 'center' }} onClick={handleLinkAdd}>
-                            <FaLink /> Establish Cloud Link
-                        </button>
-                    </div>
-                )}
-                {activeTab === 'broadcast' && (
-                    <div className="upload-nexus animate-fade-in" style={{ background: '#f8fafc', padding: '3rem', borderRadius: '32px' }}>
-                        <div style={{ marginBottom: '2rem' }}>
-                            <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.4rem', fontWeight: 800 }}>Dispatch Section Broadcast</h3>
-                            <p style={{ color: 'var(--text-muted)', margin: '0.4rem 0 0 0' }}>Send urgent notes or updates to all students in {selectedSections.join(', ')}</p>
-                        </div>
-                        <div className="nexus-form-grid">
-                            <div className="nexus-group full">
-                                <label style={{ color: 'var(--accent-primary)' }}>Message Transcript</label>
-                                <textarea
-                                    className="cyber-input"
-                                    rows="5"
-                                    value={broadcastMsg}
-                                    onChange={(e) => setBroadcastMsg(e.target.value)}
-                                    placeholder="Type your message for the students..."
-                                    style={{ background: 'white', border: '1px solid var(--pearl-border)' }}
-                                />
-                            </div>
-                            <div className="nexus-group">
-                                <label style={{ color: 'var(--accent-secondary)' }}>Transmission Type</label>
-                                <select className="cyber-input" value={broadcastType} onChange={(e) => setBroadcastType(e.target.value)} style={{ background: 'white' }}>
-                                    <option value="announcement">Standard Announcement</option>
-                                    <option value="urgent">Urgent Alert</option>
-                                    <option value="reminder">Task Reminder</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button
-                            className="cyber-btn primary"
-                            style={{ width: '100%', marginTop: '2.5rem', justifyContent: 'center', background: 'linear-gradient(135deg, #0ea5e9, #22d3ee)' }}
-                            onClick={async () => {
-                                if (!broadcastMsg) return alert('Protocol Failure: Message empty.');
-                                const { subject, year } = getContext();
-                                try {
-                                    await apiPost('/api/faculty/messages', {
-                                        message: broadcastMsg,
-                                        type: broadcastType,
-                                        year,
-                                        sections: selectedSections,
-                                        subject
-                                    });
-                                    alert('✅ Mesh Transmission Successful');
-                                    setBroadcastMsg('');
-                                } catch (e) {
-                                    alert(`Transmission Interrupted: ${e.message}`);
-                                }
-                            }}
-                        >
-                            <FaPaperPlane /> Initiate Global Broadcast to Students
+                        <button className="fd-btn primary" style={{ width: '100%', marginTop: '2rem', justifyContent: 'center' }} onClick={handleUpload}>
+                            <FaPaperPlane /> Upload to {selectedSections.length} Sections
                         </button>
                     </div>
                 )}
 
-                {activeTab === 'resources' && (
-                    <div className="registry- nexus animate-fade-in">
-                        <div className="node-grid">
-                            {globalResources.map((res, i) => (
-                                <div key={i} className="material-node" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <div className="icon-box" style={{ background: '#f8fafc' }}>
-                                        {res.type === 'videos' ? <FaVideo style={{ color: '#10b981' }} /> : <FaFileAlt style={{ color: '#3b82f6' }} />}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>{res.title}</div>
-                                        <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.2rem' }}>
-                                            <span className="status-badge" style={{ background: '#f1f5f9', color: '#64748b', fontSize: '0.6rem' }}>SEC {res.section}</span>
-                                            <span className="status-badge" style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '0.6rem' }}>{res.type}</span>
-                                        </div>
-                                    </div>
-                                    {res.url && <a href={res.url} target="_blank" rel="noreferrer" className="icon-box" style={{ width: '30px', height: '30px', fontSize: '0.8rem' }}><FaEye /></a>}
-                                </div>
-                            ))}
+                {activeTab === 'broadcast' && (
+                    <div className="animate-fade-in" style={{ padding: '2rem', background: '#f8fafc', borderRadius: '16px' }}>
+                        <h3>Send Announcement</h3>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Target: Sections {selectedSections.join(', ')}</p>
+
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={labelStyle}>Type</label>
+                            <select style={inputStyle} value={broadcastType} onChange={(e) => setBroadcastType(e.target.value)}>
+                                <option value="announcement">General Announcement</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
                         </div>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={labelStyle}>Message</label>
+                            <textarea
+                                style={inputStyle}
+                                rows="5"
+                                value={broadcastMsg}
+                                onChange={(e) => setBroadcastMsg(e.target.value)}
+                                placeholder="Type your message..."
+                            />
+                        </div>
+                        <button className="fd-btn primary" style={{ width: '100%', justifyContent: 'center' }} onClick={async () => {
+                            if (!broadcastMsg) return alert('Message empty.');
+                            const { subject, year } = getContext();
+                            try {
+                                await apiPost('/api/faculty/messages', {
+                                    message: broadcastMsg,
+                                    type: broadcastType,
+                                    year,
+                                    sections: selectedSections,
+                                    subject
+                                });
+                                alert('✅ Sent Successfully');
+                                setBroadcastMsg('');
+                            } catch (e) {
+                                alert(`Failed: ${e.message}`);
+                            }
+                        }}>
+                            Send Broadcast
+                        </button>
                     </div>
                 )}
             </div>
         </div>
     );
+};
+
+const labelStyle = {
+    display: 'block',
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: 'var(--text-secondary)',
+    marginBottom: '0.4rem',
+    textTransform: 'uppercase'
+};
+
+const inputStyle = {
+    padding: '0.75rem',
+    borderRadius: '10px',
+    border: '1px solid #cbd5e1',
+    width: '100%',
+    boxSizing: 'border-box',
+    fontFamily: 'inherit',
+    outline: 'none',
+    transition: 'all 0.2s',
+    background: '#fff'
 };
 
 export default MaterialManager;

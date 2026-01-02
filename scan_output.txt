@@ -1,0 +1,90 @@
+Scanning node_modules for invalid JSON...
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\array-buffer-byte-length\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\async-function\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\available-typed-arrays\tsconfig.json Expected property name or '}' in JSON at position 29 (line 3 column 5)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\call-bind-apply-helpers\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\call-bound\tsconfig.json Expected double-quoted property name in JSON at position 100 (line 6 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\data-view-buffer\tsconfig.json Expected double-quoted property name in JSON at position 94 (line 4 column 39)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\data-view-byte-length\tsconfig.json Expected double-quoted property name in JSON at position 94 (line 4 column 39)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\data-view-byte-offset\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\define-data-property\tsconfig.json Expected property name or '}' in JSON at position 29 (line 3 column 5)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\dunder-proto\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\es-define-property\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\es-errors\tsconfig.json Expected property name or '}' in JSON at position 26 (line 3 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\es-object-atoms\tsconfig.json Expected double-quoted property name in JSON at position 76 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\es-set-tostringtag\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\es-shim-unscopables\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\es-to-primitive\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\eslint-module-utils\tsconfig.json Expected double-quoted property name in JSON at position 138 (line 7 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\for-each\tsconfig.json Unexpected token ']', ..."verage",
+	],
+}
+" is not valid JSON
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\generator-function\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\get-proto\tsconfig.json Expected property name or '}' in JSON at position 58 (line 4 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\get-symbol-description\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\gopd\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\has-bigints\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\has-proto\tsconfig.json Unexpected token ']', ..."verage",
+	],
+	"compi"... is not valid JSON
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\has-symbols\tsconfig.json Expected double-quoted property name in JSON at position 108 (line 6 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\has-tostringtag\tsconfig.json Expected property name or '}' in JSON at position 29 (line 3 column 5)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\hasown\tsconfig.json Unexpected token ']', ..."erage",
+  ],
+}
+" is not valid JSON
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\internal-slot\tsconfig.json Expected property name or '}' in JSON at position 58 (line 4 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-arguments\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-array-buffer\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-async-function\tsconfig.json Expected double-quoted property name in JSON at position 115 (line 6 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-bigint\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-boolean-object\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-data-view\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-date-object\tsconfig.json Expected double-quoted property name in JSON at position 70 (line 6 column 1)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-finalizationregistry\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-map\tsconfig.json Expected property name or '}' in JSON at position 29 (line 3 column 5)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-negative-zero\tsconfig.json Expected property name or '}' in JSON at position 29 (line 3 column 5)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-number-object\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-regex\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-set\tsconfig.json Expected property name or '}' in JSON at position 29 (line 3 column 5)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-shared-array-buffer\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-string\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-symbol\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-typed-array\tsconfig.json Unexpected token ']', ..."verage",
+	],
+}
+" is not valid JSON
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-weakmap\tsconfig.json Expected property name or '}' in JSON at position 29 (line 3 column 5)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-weakref\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\is-weakset\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\math-intrinsics\tsconfig.json Expected double-quoted property name in JSON at position 34 (line 3 column 1)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\own-keys\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\possible-typed-array-names\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\psl\types\tsconfig.json Expected double-quoted property name in JSON at position 267 (line 14 column 5)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\safe-array-concat\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\safe-push-apply\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\safe-regex-test\tsconfig.json Expected property name or '}' in JSON at position 58 (line 4 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\set-function-length\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\set-function-name\tsconfig.json Expected property name or '}' in JSON at position 29 (line 3 column 5)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\set-proto\tsconfig.json Expected property name or '}' in JSON at position 58 (line 4 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\side-channel\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\side-channel-list\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\side-channel-map\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\side-channel-weakmap\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\stop-iteration-iterator\tsconfig.json Unexpected token ']', ..."verage",
+	],
+}" is not valid JSON
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\typed-array-buffer\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\typed-array-byte-length\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\typed-array-byte-offset\tsconfig.json Expected double-quoted property name in JSON at position 108 (line 6 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\typed-array-length\tsconfig.json Expected double-quoted property name in JSON at position 108 (line 6 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\unbox-primitive\tsconfig.json Unexpected token ']', ..."verage",
+	],
+}
+" is not valid JSON
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\which-boxed-primitive\tsconfig.json Expected double-quoted property name in JSON at position 79 (line 5 column 2)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\which-builtin-type\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\which-collection\tsconfig.json Expected property name or '}' in JSON at position 29 (line 3 column 5)
+INVALID JSON: C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\which-typed-array\tsconfig.json Expected double-quoted property name in JSON at position 84 (line 5 column 3)
+Scan complete.

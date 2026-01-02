@@ -1,0 +1,10 @@
+
+> my-app@1.0.1 build
+> react-app-rewired build
+
+Creating an optimized production build...
+Failed to compile.
+
+[eslint] Cannot find module 'C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\esquery\dist\esquery.min.js'. Please verify that the package.json has a valid "main" entry
+
+

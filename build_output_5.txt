@@ -1,0 +1,25 @@
+
+> my-app@1.0.1 build
+> react-app-rewired build
+
+node:internal/modules/cjs/loader:501
+      throw err;
+      ^
+
+Error: Cannot find module 'C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\mini-css-extract-plugin\dist\index.js'. Please verify that the package.json has a valid "main" entry
+    at tryPackage (node:internal/modules/cjs/loader:493:19)
+    at Function._findPath (node:internal/modules/cjs/loader:788:18)
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1229:27)
+    at Function._load (node:internal/modules/cjs/loader:1068:27)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:219:24)
+    at Module.require (node:internal/modules/cjs/loader:1329:12)
+    at require (node:internal/modules/helpers:136:16)
+    at Object.<anonymous> (C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\react-scripts\config\webpack.config.js:19:30)
+    at Module._compile (node:internal/modules/cjs/loader:1550:14) {
+  code: 'MODULE_NOT_FOUND',
+  path: '\\\\?\\C:\\Users\\rajub\\OneDrive\\Desktop\\aiXfn\\node_modules\\mini-css-extract-plugin\\package.json',
+  requestPath: 'mini-css-extract-plugin'
+}
+
+Node.js v23.2.0

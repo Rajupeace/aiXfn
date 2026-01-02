@@ -1,0 +1,10 @@
+
+> my-app@1.0.1 build
+> react-app-rewired build
+
+Creating an optimized production build...
+Failed to compile.
+
+Error: Cannot find module 'C:\Users\rajub\OneDrive\Desktop\aiXfn\node_modules\klona\full\index.js'
+
+

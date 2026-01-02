@@ -12,7 +12,6 @@ import InterviewQA from './Components/StudentDashboard/InterviewQA';
 import AdvancedCourseMaterials from './Components/StudentDashboard/AdvancedCourseMaterials';
 import './App.css';
 import RocketSplash from './Components/RocketSplash/RocketSplash';
-import CommandPalette from './Components/CommandPalette/CommandPalette';
 import ThemeToggle from './Components/ThemeToggle/ThemeToggle';
 import AnnouncementTicker from './Components/AnnouncementTicker/AnnouncementTicker';
 
@@ -24,19 +23,7 @@ function App() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isFaculty, setIsFaculty] = useState(false);
     const [facultyData, setFacultyData] = useState(null);
-    const [isCmdOpen, setIsCmdOpen] = useState(false);
 
-    // Global Key Listeners
-    useEffect(() => {
-        const handleKeys = (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                setIsCmdOpen(true);
-            }
-        };
-        window.addEventListener('keydown', handleKeys);
-        return () => window.removeEventListener('keydown', handleKeys);
-    }, []);
 
     const userRole = isAdmin ? 'admin' : isFaculty ? 'faculty' : 'student';
     const currentUser = studentData || facultyData || { studentName: 'Administrator' };
@@ -97,142 +84,76 @@ function App() {
 
     console.log('App State:', { isInitialized, isAuthenticated, studentData }); // Debug log
 
-    // Prevent routing until we have checked for an existing session and splash is done
-    if (!isInitialized || showSplash) {
-        return <RocketSplash onFinish={() => setShowSplash(false)} />;
-    }
-
-    const rootElement = (() => {
-        if (!isAuthenticated) return (
-            <LoginRegister
-                setIsAuthenticated={setIsAuthenticated}
-                setStudentData={setStudentData}
-                setIsAdmin={setIsAdmin}
-                setIsFaculty={setIsFaculty}
-                setFacultyData={setFacultyData}
-            />
-        );
-        if (isAdmin) return <Navigate to="/admin" replace />;
-        if (isFaculty) return <Navigate to="/faculty" replace />;
-        return <Navigate to="/dashboard" replace />;
-    })();
-
+    // Pre-mount Login/App behind Splash to fix lag
     return (
-        <Router>
-            <div className="App">
-                {isAuthenticated && (
-                    <>
-                        <CommandPalette
-                            isOpen={isCmdOpen}
-                            onClose={() => setIsCmdOpen(false)}
-                            role={userRole}
-                            userData={currentUser}
-                        />
-                        <div className="system-ui-overlay">
-                            <ThemeToggle />
-                            <div className="cmd-hint" onClick={() => setIsCmdOpen(true)}>
-                                <span className="kbd">Ctrl</span> + <span className="kbd">K</span>
-                            </div>
-                        </div>
-                        <AnnouncementTicker />
-                    </>
-                )}
-                <Routes>
-                    <Route path="/" element={rootElement} />
-                    <Route
-                        path="/dashboard"
-                        element={
-                            isAuthenticated && studentData && !isAdmin ?
-                                <StudentDashboard
-                                    studentData={studentData}
-                                    onLogout={() => {
-                                        setIsAuthenticated(false);
-                                        setStudentData(null);
-                                        localStorage.removeItem('studentToken');
-                                        localStorage.removeItem('userData');
-                                    }}
-                                /> :
-                                <Navigate to="/" replace />
-                        }
-                    />
-                    <Route
-                        path="/semester-notes"
-                        element={
-                            isAuthenticated && studentData && !isAdmin ?
-                                <SemesterNotes /> :
-                                <Navigate to="/" replace />
-                        }
-                    />
-                    <Route
-                        path="/advanced-learning"
-                        element={
-                            isAuthenticated && studentData && !isAdmin ?
-                                <AdvancedLearning /> :
-                                <Navigate to="/" replace />
-                        }
-                    />
-                    <Route
-                        path="/advanced-notes"
-                        element={
-                            isAuthenticated && studentData && !isAdmin ?
-                                <AdvancedNotes /> :
-                                <Navigate to="/" replace />
-                        }
-                    />
-                    <Route
-                        path="/advanced-materials/:courseName/:type"
-                        element={
-                            isAuthenticated && studentData && !isAdmin ?
-                                <AdvancedCourseMaterials studentData={studentData} /> :
-                                <Navigate to="/" replace />
-                        }
-                    />
-                    <Route
-                        path="/advanced-videos"
-                        element={
-                            isAuthenticated && studentData && !isAdmin ?
-                                <AdvancedVideos /> :
-                                <Navigate to="/" replace />
-                        }
-                    />
-                    <Route
-                        path="/interview-qa"
-                        element={
-                            isAuthenticated && studentData && !isAdmin ?
-                                <InterviewQA /> :
-                                <Navigate to="/" replace />
-                        }
-                    />
-                    <Route
-                        path="/admin"
-                        element={
-                            isAuthenticated && isAdmin ?
-                                <AdminDashboard
-                                    setIsAuthenticated={setIsAuthenticated}
+        <>
+            {showSplash && <RocketSplash onFinish={() => setShowSplash(false)} />}
+
+            {!isAuthenticated ? (
+                <LoginRegister
+                    setIsAuthenticated={setIsAuthenticated}
+                    setStudentData={setStudentData}
+                    setIsAdmin={setIsAdmin}
+                    setIsFaculty={setIsFaculty}
+                    setFacultyData={setFacultyData}
+                />
+            ) : null}
+
+            {isAuthenticated && (
+                <Router>
+                    <div className="app-container">
+                        <ThemeToggle />
+                        <Routes>
+                            {/* Root Route: Redirect based on role */}
+                            <Route path="/" element={<Navigate to={
+                                userRole === 'admin' ? "/admin-dashboard" :
+                                    userRole === 'faculty' ? "/faculty-dashboard" :
+                                        "/student-dashboard"
+                            } replace />} />
+
+                            {/* Student Routes */}
+                            <Route path="/student-dashboard" element={<StudentDashboard
+                                studentData={currentUser}
+                                onLogout={() => {
+                                    localStorage.clear();
+                                    setIsAuthenticated(false);
+                                    setStudentData(null);
+                                }}
+                            />} />
+                            <Route path="/semester-notes" element={<SemesterNotes studentData={currentUser} />} />
+                            <Route path="/advanced-notes" element={<AdvancedNotes studentData={currentUser} />} />
+                            <Route path="/advanced-learning" element={<AdvancedLearning studentData={currentUser} />} />
+                            <Route path="/advanced-videos" element={<AdvancedVideos studentData={currentUser} />} />
+                            <Route path="/interview-qa" element={<InterviewQA studentData={currentUser} />} />
+                            <Route path="/advanced-course-materials" element={<AdvancedCourseMaterials studentData={currentUser} />} />
+
+                            {/* Admin Routes */}
+                            <Route path="/admin-dashboard" element={
+                                isAdmin ? <AdminDashboard
                                     setIsAdmin={setIsAdmin}
+                                    setIsAuthenticated={setIsAuthenticated}
                                     setStudentData={setStudentData}
-                                /> :
-                                <Navigate to="/" replace />
-                        }
-                    />
-                    {/* Catch all route */}
-                    <Route
-                        path="/faculty"
-                        element={
-                            isAuthenticated && isFaculty ?
+                                /> : <Navigate to="/" replace />
+                            } />
+
+                            {/* Faculty Routes */}
+                            <Route path="/faculty-dashboard" element={
                                 <FacultyDashboard
-                                    facultyData={facultyData}
+                                    facultyData={currentUser}
                                     setIsAuthenticated={setIsAuthenticated}
                                     setIsFaculty={setIsFaculty}
-                                /> :
-                                <Navigate to="/" replace />
-                        }
-                    />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-            </div>
-        </Router>
+                                />
+                            } />
+
+                            {/* Fallback */}
+                            <Route path="*" element={<Navigate to="/" replace />} />
+                        </Routes>
+                    </div>
+                </Router>
+            )}
+        </>
     );
+
 }
 
 export default App;

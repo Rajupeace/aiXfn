@@ -4,11 +4,15 @@ import { Button } from 'react-bootstrap';
 import {
     FaArrowLeft, FaBook, FaVideo, FaUserTie,
     FaJava, FaPython, FaReact, FaNodeJs, FaHtml5, FaCss3, FaJs, FaDatabase, FaCode, FaAngular, FaPhp, FaLaptopCode,
-    FaMicrochip, FaWaveSquare, FaSatelliteDish, FaBolt, FaRobot, FaNetworkWired, FaCogs, FaChartLine, FaBuilding, FaFlask
+    FaMicrochip, FaWaveSquare, FaSatelliteDish, FaBolt, FaRobot, FaNetworkWired, FaCogs, FaChartLine, FaBuilding, FaFlask,
+    FaChevronRight, FaChevronLeft, FaList, FaPlay, FaCheckCircle, FaCloud, FaShieldAlt, FaCubes
 } from 'react-icons/fa';
 import { SiDjango, SiFlask, SiMongodb, SiCplusplus, SiArduino, SiRaspberrypi } from 'react-icons/si';
 import { apiGet } from '../../utils/apiClient';
+import TestInterface from './TestInterface';
+import { getCourseContent } from './advancedContentData';
 import './AdvancedLearning.css';
+import '../StudentDashboard/StudentDashboard.css';
 
 // Branch-specific Advanced Courses
 const BRANCH_COURSES = {
@@ -92,15 +96,25 @@ const BRANCH_COURSES = {
     }
 };
 
-const AdvancedLearning = () => {
+const AdvancedLearning = ({ isDashboard = false }) => {
     const navigate = useNavigate();
     const [subjects, setSubjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [branchTitle, setBranchTitle] = useState("Advanced Learning Hub");
     const [categories, setCategories] = useState({});
 
-    // Initial Progress State (Mock Data for "New Feature")
+    // Views: 'catalog' | 'viewer'
+    const [viewMode, setViewMode] = useState('catalog');
+
+    // Viewer State
+    const [activeCourse, setActiveCourse] = useState(null);
+    const [activeTopics, setActiveTopics] = useState([]);
+    const [currentTopicIndex, setCurrentTopicIndex] = useState(0);
+
+    // Progress State
     const [progressData, setProgressData] = useState({});
+    const [showTestInterface, setShowTestInterface] = useState(false);
+    const [courseProgress, setCourseProgress] = useState({});
 
     useEffect(() => {
         const fetchSubjects = async () => {
@@ -108,8 +122,6 @@ const AdvancedLearning = () => {
                 // Get student's branch from localStorage
                 const userData = JSON.parse(localStorage.getItem('userData') || '{}');
                 const studentBranch = (userData.branch || 'CSE').toUpperCase();
-
-                console.log('[AdvancedLearning] Student branch:', studentBranch);
 
                 // Get branch-specific courses
                 const branchData = BRANCH_COURSES[studentBranch] || BRANCH_COURSES.DEFAULT;
@@ -127,9 +139,11 @@ const AdvancedLearning = () => {
                 });
                 setProgressData(prog);
 
+                // Load real progress from API
+                loadCourseProgress(allCourses);
+
             } catch (error) {
                 console.error('Failed to load advanced learning:', error);
-                // Fallback to CSE courses
                 const fallbackData = BRANCH_COURSES.CSE;
                 setCategories(fallbackData.categories);
                 setSubjects(Object.values(fallbackData.categories).flat());
@@ -141,14 +155,272 @@ const AdvancedLearning = () => {
         fetchSubjects();
     }, []);
 
-    const handleNavigate = (course, type) => {
-        navigate(`/advanced-materials/${encodeURIComponent(course)}/${type}`);
+    const loadCourseProgress = async (courses) => {
+        try {
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            const studentId = userData.sid || userData.studentId;
+            if (!studentId) return;
+
+            const progressMap = {};
+            for (const course of courses) {
+                try {
+                    const progress = await apiGet(`/api/progress/${studentId}/${course}?type=course`);
+                    if (progress) {
+                        progressMap[course] = progress;
+                    }
+                } catch (error) {
+                    // Course might not have progress yet
+                }
+            }
+            setCourseProgress(progressMap);
+        } catch (error) {
+            console.error('Error loading course progress:', error);
+        }
     };
 
-    // Helper to get Icon
+    const handleOpenCourse = (course) => {
+        // Load content for the course
+        const contentData = getCourseContent(course);
+        if (contentData) {
+            setActiveCourse(course);
+            setActiveTopics(contentData.topics);
+            setCurrentTopicIndex(0);
+            setViewMode('viewer');
+            window.scrollTo(0, 0);
+        } else {
+            // Fallback for courses without content data
+            alert("Interactive content coming soon for this module! Opening catalog...");
+        }
+    };
+
+    const handleTopicChange = (index) => {
+        setCurrentTopicIndex(index);
+        window.scrollTo(0, 0);
+    };
+
+    const handleTakeTest = (course) => {
+        setActiveCourse(course);
+        setShowTestInterface(true);
+    };
+
+    // Helper to get external links
+    const getExternalLinks = (courseName) => {
+        const normalized = courseName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        // GeekForGeeks links
+        const gfgLinks = {
+            python: 'https://www.geeksforgeeks.org/python-programming-language/',
+            java: 'https://www.geeksforgeeks.org/java/',
+            javascript: 'https://www.geeksforgeeks.org/javascript/',
+            htmlcss: 'https://www.geeksforgeeks.org/html-css/',
+            react: 'https://www.geeksforgeeks.org/reactjs-tutorials/',
+            nodejs: 'https://www.geeksforgeeks.org/nodejs/',
+            mongodb: 'https://www.geeksforgeeks.org/mongodb-tutorial/',
+            mysql: 'https://www.geeksforgeeks.org/mysql-tutorial/',
+            django: 'https://www.geeksforgeeks.org/django-tutorial/',
+            flask: 'https://www.geeksforgeeks.org/flask-tutorial/',
+            angular: 'https://www.geeksforgeeks.org/angularjs/',
+            vuejs: 'https://www.geeksforgeeks.org/vue-js/',
+            expressjs: 'https://www.geeksforgeeks.org/express-js/',
+            cpp: 'https://www.geeksforgeeks.org/c-plus-plus/',
+            c: 'https://www.geeksforgeeks.org/c-programming-language/',
+            go: 'https://www.geeksforgeeks.org/go-programming-language/',
+            rust: 'https://www.geeksforgeeks.org/rust-programming-language/',
+            php: 'https://www.geeksforgeeks.org/php/',
+            machinelearning: 'https://www.geeksforgeeks.org/machine-learning/',
+            datascience: 'https://www.geeksforgeeks.org/data-science-tutorial/',
+            tensorflow: 'https://www.geeksforgeeks.org/tensorflow/',
+            pytorch: 'https://www.geeksforgeeks.org/pytorch/',
+            opencv: 'https://www.geeksforgeeks.org/opencv-python-tutorial/',
+            cloudcomputing: 'https://www.geeksforgeeks.org/cloud-computing/',
+            devops: 'https://www.geeksforgeeks.org/devops-tutorial/',
+            docker: 'https://www.geeksforgeeks.org/docker-tutorial/',
+            kubernetes: 'https://www.geeksforgeeks.org/kubernetes-tutorial/',
+            cybersecurity: 'https://www.geeksforgeeks.org/cyber-security-tutorial/',
+            sql: 'https://www.geeksforgeeks.org/sql-tutorial/',
+            graphql: 'https://www.geeksforgeeks.org/graphql/',
+            redis: 'https://www.geeksforgeeks.org/redis-tutorial/',
+            postgresql: 'https://www.geeksforgeeks.org/postgresql-tutorial/',
+            arduino: 'https://www.geeksforgeeks.org/arduino/',
+            raspberrypi: 'https://www.geeksforgeeks.org/raspberry-pi-tutorial/',
+            armprogramming: 'https://www.geeksforgeeks.org/arm-processor/',
+            iotdevelopment: 'https://www.geeksforgeeks.org/internet-of-things-iot/',
+            rtos: 'https://www.geeksforgeeks.org/real-time-operating-system-rtos/',
+            fpga: 'https://www.geeksforgeeks.org/fpga/',
+            autocad: 'https://www.geeksforgeeks.org/autocad/',
+            solidworks: 'https://www.geeksforgeeks.org/solidworks/',
+            catia: 'https://www.geeksforgeeks.org/catia/',
+            fusion360: 'https://www.geeksforgeeks.org/fusion-360/',
+            printing3d: 'https://www.geeksforgeeks.org/3d-printing/',
+            cncmachining: 'https://www.geeksforgeeks.org/cnc-machining/',
+            manufacturingadditive: 'https://www.geeksforgeeks.org/additive-manufacturing/',
+            sixsigma: 'https://www.geeksforgeeks.org/six-sigma/',
+            thermodynamics: 'https://www.geeksforgeeks.org/thermodynamics/',
+            fluidmechanics: 'https://www.geeksforgeeks.org/fluid-mechanics/',
+            strengthofmaterials: 'https://www.geeksforgeeks.org/strength-of-materials/',
+            machinedesign: 'https://www.geeksforgeeks.org/machine-design/',
+            robotics: 'https://www.geeksforgeeks.org/robotics/',
+            mechatronics: 'https://www.geeksforgeeks.org/mechatronics/',
+            ansys: 'https://www.geeksforgeeks.org/ansys/',
+            cfd: 'https://www.geeksforgeeks.org/computational-fluid-dynamics/',
+            automotiveengineering: 'https://www.geeksforgeeks.org/automotive-engineering/',
+            autocadcivil3d: 'https://www.geeksforgeeks.org/autocad-civil-3d/',
+            staadpro: 'https://www.geeksforgeeks.org/staad-pro/',
+            etabs: 'https://www.geeksforgeeks.org/etabs/',
+            revit: 'https://www.geeksforgeeks.org/revit/',
+            primavera: 'https://www.geeksforgeeks.org/primavera/',
+            rcclinedesign: 'https://www.geeksforgeeks.org/rcc-design/',
+            steelstructures: 'https://www.geeksforgeeks.org/steel-structures/',
+            concreteprestressed: 'https://www.geeksforgeeks.org/prestressed-concrete/',
+            engineeringearthquake: 'https://www.geeksforgeeks.org/earthquake-engineering/',
+            managementproject: 'https://www.geeksforgeeks.org/project-management/',
+            estimationcost: 'https://www.geeksforgeeks.org/cost-estimation/',
+            controlquality: 'https://www.geeksforgeeks.org/quality-control/',
+            managementconstruction: 'https://www.geeksforgeeks.org/construction-management/',
+            buildinggreen: 'https://www.geeksforgeeks.org/green-building/',
+            bim: 'https://www.geeksforgeeks.org/building-information-modeling/',
+            engineeringgeotechnical: 'https://www.geeksforgeeks.org/geotechnical-engineering/',
+            engineeringtransportation: 'https://www.geeksforgeeks.org/transportation-engineering/',
+            powersystems: 'https://www.geeksforgeeks.org/power-systems/',
+            machineselectrical: 'https://www.geeksforgeeks.org/electrical-machines/',
+            controlsystems: 'https://www.geeksforgeeks.org/control-systems/',
+            powerselectronics: 'https://www.geeksforgeeks.org/power-electronics/',
+            energysolar: 'https://www.geeksforgeeks.org/solar-energy/',
+            energywind: 'https://www.geeksforgeeks.org/wind-energy/',
+            gridsmart: 'https://www.geeksforgeeks.org/smart-grid/',
+            storagesenergy: 'https://www.geeksforgeeks.org/energy-storage/',
+            automationindustrial: 'https://www.geeksforgeeks.org/industrial-automation/',
+            plcprogramming: 'https://www.geeksforgeeks.org/plc-programming/',
+            scadaindustrial: 'https://www.geeksforgeeks.org/scada/',
+            iotiindustrial: 'https://www.geeksforgeeks.org/industrial-iot/',
+            drivesmotor: 'https://www.geeksforgeeks.org/motor-drives/',
+            vehicleelectric: 'https://www.geeksforgeeks.org/electric-vehicles/',
+            engineeringhighvoltage: 'https://www.geeksforgeeks.org/high-voltage-engineering/',
+            qualitypower: 'https://www.geeksforgeeks.org/power-quality/',
+            simulinkmatlab: 'https://www.geeksforgeeks.org/matlab/',
+            analogelectronics: 'https://www.geeksforgeeks.org/analog-electronics/',
+            digitalelectronics: 'https://www.geeksforgeeks.org/digital-electronics/',
+            microprocessors: 'https://www.geeksforgeeks.org/microprocessors/',
+            microcontrollers: 'https://www.geeksforgeeks.org/microcontrollers/',
+            vlsidesign: 'https://www.geeksforgeeks.org/vlsi-design/',
+            processingdigital: 'https://www.geeksforgeeks.org/digital-signal-processing/',
+            communicationwireless: 'https://www.geeksforgeeks.org/wireless-communication/',
+            designantenna: 'https://www.geeksforgeeks.org/antenna-design/',
+            communicationoptical: 'https://www.geeksforgeeks.org/optical-communication/',
+            technology5g: 'https://www.geeksforgeeks.org/5g-technology/',
+            designpcb: 'https://www.geeksforgeeks.org/pcb-design/',
+            engineeringrf: 'https://www.geeksforgeeks.org/rf-engineering/',
+            communicationsatellite: 'https://www.geeksforgeeks.org/satellite-communication/',
+            computervision: 'https://www.geeksforgeeks.org/computer-vision/',
+            learningreinforcement: 'https://www.geeksforgeeks.org/reinforcement-learning/',
+            aigenerative: 'https://www.geeksforgeeks.org/generative-ai/',
+            processingnaturallanguage: 'https://www.geeksforgeeks.org/natural-language-processing/',
+            julia: 'https://www.geeksforgeeks.org/julia-programming-language/',
+            r: 'https://www.geeksforgeeks.org/r-programming-language/',
+            visualizationdata: 'https://www.geeksforgeeks.org/data-visualization/',
+            bigdata: 'https://www.geeksforgeeks.org/big-data/',
+            pandas: 'https://www.geeksforgeeks.org/pandas-tutorial/',
+            numpy: 'https://www.geeksforgeeks.org/numpy-tutorial/',
+            matplotlib: 'https://www.geeksforgeeks.org/matplotlib-tutorial/',
+            scikitlearn: 'https://www.geeksforgeeks.org/scikit-learn/',
+            keras: 'https://www.geeksforgeeks.org/keras/',
+            deeplearning: 'https://www.geeksforgeeks.org/deep-learning-tutorial/',
+            learningneural: 'https://www.geeksforgeeks.org/neural-networks/',
+            wordpres: 'https://www.geeksforgeeks.org/wordpress/',
+            apisrest: 'https://www.geeksforgeeks.org/rest-api/',
+            linux: 'https://www.geeksforgeeks.org/linux-tutorial/',
+            exceladvanced: 'https://www.geeksforgeeks.org/excel/',
+            analysisdata: 'https://www.geeksforgeeks.org/data-analysis/',
+            communication: 'https://www.geeksforgeeks.org/communication-skills/',
+            presentation: 'https://www.geeksforgeeks.org/presentation-skills/',
+            managementproject: 'https://www.geeksforgeeks.org/project-management/',
+            leadership: 'https://www.geeksforgeeks.org/leadership/',
+        };
+
+        // W3Schools links
+        const w3Links = {
+            python: 'https://www.w3schools.com/python/',
+            java: 'https://www.w3schools.com/java/',
+            javascript: 'https://www.w3schools.com/js/',
+            htmlcss: 'https://www.w3schools.com/html/',
+            react: 'https://www.w3schools.com/react/',
+            nodejs: 'https://www.w3schools.com/nodejs/',
+            sql: 'https://www.w3schools.com/sql/',
+            php: 'https://www.w3schools.com/php/',
+            cpp: 'https://www.w3schools.com/cpp/',
+            c: 'https://www.w3schools.com/c/',
+            go: 'https://www.w3schools.com/go/',
+            rust: 'https://www.w3schools.com/rust/',
+            bootstrap: 'https://www.w3schools.com/bootstrap/',
+            jquery: 'https://www.w3schools.com/jquery/',
+            xml: 'https://www.w3schools.com/xml/',
+            json: 'https://www.w3schools.com/js/js_json_intro.asp',
+            ajax: 'https://www.w3schools.com/js/js_ajax_intro.asp',
+            typescript: 'https://www.w3schools.com/typescript/',
+            sass: 'https://www.w3schools.com/sass/',
+            vue: 'https://www.w3schools.com/vue/',
+            angular: 'https://www.w3schools.com/angular/',
+            git: 'https://www.w3schools.com/git/',
+            mongodb: 'https://www.w3schools.com/mongodb/',
+            mysql: 'https://www.w3schools.com/mysql/',
+            postgresql: 'https://www.w3schools.com/postgresql/',
+            redis: 'https://www.w3schools.com/redis/',
+            excel: 'https://www.w3schools.com/excel/',
+            access: 'https://www.w3schools.com/msaccess/',
+            powershell: 'https://www.w3schools.com/powershell/',
+            bash: 'https://www.w3schools.com/bash/',
+            kotlin: 'https://www.w3schools.com/kotlin/',
+            swift: 'https://www.w3schools.com/swift/',
+            r: 'https://www.w3schools.com/r/',
+            kotlin: 'https://www.w3schools.com/kotlin/',
+            matlab: 'https://www.w3schools.com/matlab/',
+            statistics: 'https://www.w3schools.com/statistics/',
+            datascience: 'https://www.w3schools.com/datascience/',
+            machinelearning: 'https://www.w3schools.com/ai/',
+            cybersecurity: 'https://www.w3schools.com/cybersecurity/',
+            colors: 'https://www.w3schools.com/colors/',
+            icons: 'https://www.w3schools.com/icons/',
+            graphics: 'https://www.w3schools.com/graphics/',
+            canvas: 'https://www.w3schools.com/graphics/canvas_intro.asp',
+            svg: 'https://www.w3schools.com/graphics/svg_intro.asp',
+            charsets: 'https://www.w3schools.com/charsets/',
+            howto: 'https://www.w3schools.com/howto/',
+        };
+
+        const gfgKey = Object.keys(gfgLinks).find(key => normalized.includes(key)) || 'python';
+        const w3Key = Object.keys(w3Links).find(key => normalized.includes(key)) || 'python';
+
+        return {
+            gfg: gfgLinks[gfgKey] || 'https://www.geeksforgeeks.org/',
+            w3schools: w3Links[w3Key] || 'https://www.w3schools.com/'
+        };
+    };
+
+    const getSubjectColor = (name) => {
+        const n = name.toLowerCase();
+        if (n.includes('react')) return 'linear-gradient(135deg, #61dafb 0%, #21a3c4 100%)';
+        if (n.includes('angular')) return 'linear-gradient(135deg, #dd0031 0%, #c3002f 100%)';
+        if (n.includes('vue')) return 'linear-gradient(135deg, #4fc08d 0%, #2c5f47 100%)';
+        if (n.includes('python') || n.includes('django')) return 'linear-gradient(135deg, #3776ab 0%, #ffd43b 100%)';
+        if (n.includes('java')) return 'linear-gradient(135deg, #ed8b00 0%, #f8981d 100%)';
+        if (n.includes('javascript') || n.includes('js')) return 'linear-gradient(135deg, #f7df1e 0%, #f39c12 100%)';
+        if (n.includes('html') || n.includes('css')) return 'linear-gradient(135deg, #e34f26 0%, #1572b6 100%)';
+        if (n.includes('node')) return 'linear-gradient(135deg, #339933 0%, #68a063 100%)';
+        if (n.includes('mongodb')) return 'linear-gradient(135deg, #47a248 0%, #2e7030 100%)';
+        if (n.includes('sql') || n.includes('database')) return 'linear-gradient(135deg, #336791 0%, #1e4a6b 100%)';
+        if (n.includes('machine learning') || n.includes('ml')) return 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)';
+        if (n.includes('data science')) return 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)';
+        if (n.includes('cloud')) return 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)';
+        if (n.includes('devops')) return 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
+        if (n.includes('docker')) return 'linear-gradient(135deg, #2496ed 0%, #1e7fc7 100%)';
+        if (n.includes('kubernetes')) return 'linear-gradient(135deg, #326ce5 0%, #2a5cc1 100%)';
+        if (n.includes('cyber security')) return 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)';
+        return 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)';
+    };
+
+    // Helper to get Icon (Same as before)
     const getSubjectIcon = (name) => {
         const n = name.toLowerCase();
-        // Programming Languages
         if (n.includes('java') && !n.includes('script')) return <FaJava />;
         if (n.includes('python')) return <FaPython />;
         if (n.includes('react')) return <FaReact />;
@@ -164,377 +436,218 @@ const AdvancedLearning = () => {
         if (n.includes('django')) return <SiDjango />;
         if (n.includes('flask')) return <SiFlask />;
         if (n.includes('sql') || n.includes('database')) return <FaDatabase />;
-
-        // ECE - Electronics
-        if (n.includes('arduino')) return <SiArduino />;
-        if (n.includes('raspberry')) return <SiRaspberrypi />;
-        if (n.includes('microprocessor') || n.includes('microcontroller') || n.includes('vlsi') || n.includes('fpga')) return <FaMicrochip />;
-        if (n.includes('signal') || n.includes('analog') || n.includes('digital')) return <FaWaveSquare />;
-        if (n.includes('communication') || n.includes('antenna') || n.includes('5g') || n.includes('wireless')) return <FaSatelliteDish />;
-        if (n.includes('embedded') || n.includes('iot') || n.includes('arm')) return <FaCogs />;
-        if (n.includes('pcb') || n.includes('rf')) return <FaNetworkWired />;
-
-        // EEE - Electrical
-        if (n.includes('power') || n.includes('electrical') || n.includes('voltage')) return <FaBolt />;
-        if (n.includes('solar') || n.includes('wind') || n.includes('renewable') || n.includes('energy')) return <FaBolt />;
-        if (n.includes('plc') || n.includes('scada') || n.includes('automation')) return <FaCogs />;
-        if (n.includes('motor') || n.includes('machine')) return <FaCogs />;
-
-        // MECH - Mechanical
-        if (n.includes('cad') || n.includes('solidworks') || n.includes('catia') || n.includes('autocad')) return <FaCogs />;
-        if (n.includes('cnc') || n.includes('manufacturing') || n.includes('3d print')) return <FaCogs />;
-        if (n.includes('robot') || n.includes('mechatronics')) return <FaRobot />;
-        if (n.includes('ansys') || n.includes('cfd') || n.includes('simulation')) return <FaChartLine />;
-        if (n.includes('thermo') || n.includes('fluid') || n.includes('heat')) return <FaFlask />;
-
-        // CIVIL - Civil
-        if (n.includes('staad') || n.includes('etabs') || n.includes('revit') || n.includes('bim')) return <FaBuilding />;
-        if (n.includes('structural') || n.includes('rcc') || n.includes('steel')) return <FaBuilding />;
-        if (n.includes('construction') || n.includes('project management')) return <FaBuilding />;
-        if (n.includes('geotechnical') || n.includes('transportation')) return <FaBuilding />;
-
-        // AI/ML
-        if (n.includes('machine learning') || n.includes('deep learning') || n.includes('ai') || n.includes('neural')) return <FaRobot />;
-        if (n.includes('tensorflow') || n.includes('pytorch') || n.includes('keras')) return <FaRobot />;
-        if (n.includes('data') || n.includes('analytics') || n.includes('visualization')) return <FaChartLine />;
-
-        // Default
+        if (n.includes('machine learning') || n.includes('ml')) return <FaRobot />;
+        if (n.includes('data science')) return <FaChartLine />;
+        if (n.includes('cloud')) return <FaCloud />;
+        if (n.includes('devops')) return <FaCogs />;
+        if (n.includes('docker')) return <FaCubes />;
+        if (n.includes('kubernetes')) return <FaNetworkWired />;
+        if (n.includes('cyber security')) return <FaShieldAlt />;
         return <FaLaptopCode />;
     };
 
-    // Helper to get Color
-    const getSubjectColor = (name) => {
-        const n = name.toLowerCase();
-        if (n.includes('react')) return 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)';
-        if (n.includes('angular')) return 'linear-gradient(135deg, #e52d27 0%, #b31217 100%)';
-        if (n.includes('vue')) return 'linear-gradient(135deg, #42b883 0%, #35495e 100%)';
-        if (n.includes('python') || n.includes('django')) return 'linear-gradient(135deg, #f2994a 0%, #f2c94c 100%)';
-        if (n.includes('java')) return 'linear-gradient(135deg, #e55d87 0%, #5fc3e4 100%)';
-        if (n.includes('js') || n.includes('node')) return 'linear-gradient(135deg, #f09819 0%, #edde5d 100%)';
-        return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-    };
+    // --- RENDERERS ---
 
-    const renderSection = (title, items) => (
-        <div className="section-container animate-fade-up">
-            <h2 className="section-title">{title}</h2>
-            <div className="card-grid">
-                {items.map(item => {
-                    const progress = progressData[item] || 0;
-                    return (
-                        <div key={item} className="topic-card glass-card">
-                            <div className="topic-header" style={{ background: getSubjectColor(item) }}>
-                                <div className="header-icon-large">
-                                    {getSubjectIcon(item)}
-                                </div>
-                                <h3>{item}</h3>
-                                <div className="progress-badge">
-                                    {progress}% Mastered
-                                </div>
-                            </div>
+    const renderCatalog = () => (
+        <main className="main-content">
+            {Object.entries(categories).map(([categoryName, courses]) => (
+                courses.length > 0 && (
+                    <div key={categoryName} className="section-container animate-fade-up">
+                        <h2 className="section-title">{categoryName}</h2>
+                        <div className="card-grid">
+                            {courses.map(item => {
+                                const progress = progressData[item] || 0;
+                                const courseProg = courseProgress[item];
+                                const avgScore = courseProg?.averageScore || 0;
+                                return (
+                                    <div key={item} className="topic-card glass-card">
+                                        <div className="topic-header" style={{ background: getSubjectColor(item) }}>
+                                            <div className="header-icon-large">
+                                                {getSubjectIcon(item)}
+                                            </div>
+                                            <h3>{item}</h3>
+                                            <div className="progress-badge">
+                                                {courseProg ? `${avgScore.toFixed(0)}% Score` : `${progress}% Mastered`}
+                                            </div>
+                                        </div>
 
-                            <div className="topic-body">
-                                <div className="progress-container">
-                                    <div className="progress-bar" style={{ width: `${progress}%`, background: getSubjectColor(item) }}></div>
-                                </div>
-                                <div className="resource-stats">
-                                    <span>Top Rated Course</span>
-                                    <span>⭐ 4.8</span>
-                                </div>
-                            </div>
+                                        <div className="topic-body">
+                                            <div className="progress-container">
+                                                <div className="progress-bar" style={{ width: `${courseProg ? avgScore : progress}%`, background: getSubjectColor(item) }}></div>
+                                            </div>
+                                            <div className="resource-stats">
+                                                {courseProg ? (
+                                                    <><span><FaChartLine style={{ marginRight: 6 }} />Score: {avgScore.toFixed(0)}%</span><span>Level: {courseProg.currentLevel || 'Easy'}</span></>
+                                                ) : (
+                                                    <><span><FaCheckCircle style={{ marginRight: 6 }} />Beginner Friendly</span><span>⭐ 4.8</span></>
+                                                )}
+                                            </div>
+                                        </div>
 
-                            <div className="topic-actions">
-                                <button
-                                    onClick={() => handleNavigate(item, 'notes')}
-                                    className="action-btn notes"
-                                >
-                                    <FaBook className="icon" /> Notes
-                                </button>
-                                <button
-                                    onClick={() => handleNavigate(item, 'videos')}
-                                    className="action-btn videos"
-                                >
-                                    <FaVideo className="icon" /> Videos
-                                </button>
-                                <button
-                                    onClick={() => handleNavigate(item, 'interview')}
-                                    className="action-btn interview"
-                                >
-                                    <FaUserTie className="icon" /> Q&A
-                                </button>
-                            </div>
+                                        <div className="topic-actions">
+                                            <div className="action-buttons-row">
+                                                <button onClick={() => handleOpenCourse(item)} className="action-btn notes">
+                                                    <FaBook className="icon" /> Tutorials
+                                                </button>
+                                                <button onClick={() => handleTakeTest(item)} className="action-btn test">
+                                                    <FaUserTie className="icon" /> Take Test
+                                                </button>
+                                            </div>
+                                            <div className="external-links">
+                                                <a href={getExternalLinks(item).gfg} target="_blank" rel="noopener noreferrer" className="external-link gfg">
+                                                    <span>GFG</span>
+                                                </a>
+                                                <a href={getExternalLinks(item).w3schools} target="_blank" rel="noopener noreferrer" className="external-link w3">
+                                                    <span>W3</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    );
-                })}
-            </div>
-        </div>
+                    </div>
+                )
+            ))}
+        </main>
     );
+
+    const renderViewer = () => {
+        const currentTopic = activeTopics[currentTopicIndex];
+        return (
+            <div className="viewer-container">
+                <div className="viewer-sidebar">
+                    <div className="sidebar-header">
+                        <button className="back-link" onClick={() => setViewMode('catalog')}>
+                            <FaArrowLeft /> Courses
+                        </button>
+                        <h3>{activeCourse} Tutorial</h3>
+                    </div>
+                    <ul className="topic-list">
+                        {activeTopics.map((topic, idx) => (
+                            <li
+                                key={topic.id}
+                                className={`topic-item ${idx === currentTopicIndex ? 'active' : ''}`}
+                                onClick={() => handleTopicChange(idx)}
+                            >
+                                {topic.title}
+                            </li>
+                        ))}
+                        <li className="topic-item test-item" onClick={() => setShowTestInterface(true)}>
+                            <FaUserTie /> Take Certification Test
+                        </li>
+                    </ul>
+                </div>
+
+                <div className="viewer-content">
+                    <div className="content-header">
+                        <h1>{currentTopic.title}</h1>
+                        <div className="nav-buttons">
+                            <button
+                                disabled={currentTopicIndex === 0}
+                                onClick={() => handleTopicChange(currentTopicIndex - 1)}
+                                className="nav-btn prev"
+                            >
+                                <FaChevronLeft /> Previous
+                            </button>
+                            <button
+                                disabled={currentTopicIndex === activeTopics.length - 1}
+                                onClick={() => handleTopicChange(currentTopicIndex + 1)}
+                                className="nav-btn next"
+                            >
+                                Next <FaChevronRight />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="content-body animate-fade-in" dangerouslySetInnerHTML={{ __html: currentTopic.content }} />
+
+                    {/* External Resources */}
+                    <div className="external-resources-section">
+                        <h3>External Resources</h3>
+                        <div className="external-links-viewer">
+                            <a href={getExternalLinks(activeCourse).gfg} target="_blank" rel="noopener noreferrer" className="external-link-viewer gfg">
+                                <span>📚 GeekForGeeks Tutorial</span>
+                            </a>
+                            <a href={getExternalLinks(activeCourse).w3schools} target="_blank" rel="noopener noreferrer" className="external-link-viewer w3">
+                                <span>🌐 W3Schools Tutorial</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    {currentTopic.code && (
+                        <div className="code-block-container">
+                            <div className="code-header">Example</div>
+                            <pre className="code-block">
+                                <code>{currentTopic.code}</code>
+                            </pre>
+                            <button className="try-it-btn">Try it Yourself <FaPlay size={10} /></button>
+                        </div>
+                    )}
+
+                    <div className="content-footer">
+                        <button
+                            disabled={currentTopicIndex === activeTopics.length - 1}
+                            onClick={() => handleTopicChange(currentTopicIndex + 1)}
+                            className="primary-next-btn"
+                        >
+                            Next Step &gt;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     if (loading) {
         return (
-            <div className="advanced-learning-container center-content">
+            <div className="advanced-learning-container center-content" style={{ padding: isDashboard ? '2rem 0' : '2rem 5%' }}>
                 <div className="loader"></div>
                 <p>Loading your learning path...</p>
             </div>
         );
     }
 
-    // Group subjects into categories
-    const programmingLanguages = subjects.filter(s =>
-        ['C', 'C++', 'Java', 'Python', 'JavaScript', 'PHP', 'Ruby', 'Go'].includes(s)
-    );
-
-    const webTechnologies = subjects.filter(s =>
-        ['HTML/CSS', 'React', 'Angular', 'Vue.js', 'Node.js', 'Express.js', 'Django', 'Flask'].includes(s)
-    );
-
-    const databases = subjects.filter(s =>
-        ['MongoDB', 'MySQL', 'PostgreSQL', 'SQL'].includes(s)
-    );
-
-    const advancedTopics = subjects.filter(s =>
-        !programmingLanguages.includes(s) &&
-        !webTechnologies.includes(s) &&
-        !databases.includes(s)
-    );
-
     return (
-        <div className="advanced-learning-container">
-            {/* Header Section */}
-            <header className="page-header glass-header">
-                <Button
-                    variant="link"
-                    className="back-button"
-                    onClick={() => navigate('/dashboard')}
-                >
-                    <FaArrowLeft className="me-2" /> Back
-                </Button>
-                <div className="header-content">
-                    <h1>{branchTitle} - Advanced Learning</h1>
-                    <p className="subtitle">
-                        Master industry-standard skills with our curated, premium course materials tailored for your branch.
-                    </p>
-                </div>
-            </header>
-
-            <main className="main-content">
-                {/* Render dynamic categories based on student's branch */}
-                {Object.entries(categories).map(([categoryName, courses]) => (
-                    courses.length > 0 && renderSection(categoryName, courses)
-                ))}
-
-                {subjects.length === 0 && !loading && (
-                    <div className="empty-state glass-card">
-                        <h3>Coming Soon</h3>
-                        <p>We are curating high-quality content for your branch.</p>
+        <div className={`advanced-learning-container ${viewMode === 'viewer' ? 'viewer-mode' : ''}`} style={{ padding: viewMode === 'viewer' ? '0' : (isDashboard ? '0' : '2rem 5%'), background: isDashboard ? 'transparent' : '' }}>
+            {/* Header Section (Only in Catalog) */}
+            {!isDashboard && viewMode === 'catalog' && (
+                <header className="page-header glass-header">
+                    <Button variant="link" className="back-button" onClick={() => navigate('/dashboard')}>
+                        <FaArrowLeft className="me-2" /> Back
+                    </Button>
+                    <div className="header-content">
+                        <h1>{branchTitle} Hub</h1>
+                        <p className="subtitle">Master industry-standard skills with our curated, interactive tutorials.</p>
                     </div>
-                )}
-            </main>
+                </header>
+            )}
 
-            <style jsx>{`
-                .advanced-learning-container {
-                    min-height: 100vh;
-                    background: #f0f4f8; /* Soft blue-grey background */
-                    background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
-                    background-size: 20px 20px;
-                    padding: 2rem 5%;
-                    font-family: 'Inter', sans-serif;
-                }
-                
-                .center-content {
-                    display: flex; 
-                    flex-direction: column;
-                    justify-content: center; 
-                    align-items: center; 
-                    min-height: 100vh;
-                }
+            {viewMode === 'catalog' ? renderCatalog() : renderViewer()}
 
-                .glass-header {
-                    background: rgba(255, 255, 255, 0.7);
-                    backdrop-filter: blur(10px);
-                    border-radius: 16px;
-                    padding: 2rem;
-                    margin-bottom: 3rem;
-                    border: 1px solid rgba(255, 255, 255, 0.5);
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-                    position: relative;
-                }
+            {/* Test Interface Modal */}
+            {showTestInterface && activeCourse && (() => {
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                const studentId = userData.sid || userData.studentId;
+                return studentId ? (
+                    <div className="test-modal-overlay">
+                        <div className="test-modal-content" onClick={(e) => e.stopPropagation()}>
+                            <TestInterface
+                                studentId={studentId}
+                                subject={null}
+                                course={activeCourse}
+                                onClose={() => setShowTestInterface(false)}
+                                onComplete={(result) => {
+                                    loadCourseProgress([activeCourse]);
+                                    // Maybe auto-advance if passed?
+                                }}
+                            />
+                        </div>
+                    </div>
+                ) : null;
+            })()}
 
-                .back-button {
-                    position: absolute;
-                    left: 20px;
-                    top: 20px;
-                    color: #64748b;
-                    font-weight: 600;
-                    text-decoration: none;
-                }
 
-                .header-content h1 {
-                    font-size: 2.5rem;
-                    font-weight: 800;
-                    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    margin-bottom: 0.5rem;
-                }
-
-                .subtitle {
-                    color: #64748b;
-                    font-size: 1.1rem;
-                }
-
-                .section-title {
-                    font-size: 1.5rem;
-                    color: #1e293b;
-                    margin-bottom: 1.5rem;
-                    font-weight: 700;
-                    display: flex;
-                    align-items: center;
-                }
-                .section-title:before {
-                    content: '';
-                    display: block;
-                    width: 6px;
-                    height: 24px;
-                    background: #3b82f6;
-                    border-radius: 4px;
-                    margin-right: 12px;
-                }
-
-                .card-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                    gap: 2rem;
-                    margin-bottom: 4rem;
-                }
-
-                .glass-card {
-                    background: rgba(255, 255, 255, 0.9);
-                    border-radius: 16px;
-                    border: 1px solid rgba(255, 255, 255, 0.5);
-                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-                    transition: all 0.3s ease;
-                    overflow: hidden;
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                .glass-card:hover {
-                    transform: translateY(-8px);
-                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-                }
-
-                .topic-header {
-                    padding: 1.5rem;
-                    color: white;
-                    position: relative;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    height: 140px;
-                }
-
-                .header-icon-large {
-                    font-size: 3rem;
-                    margin-bottom: 0.5rem;
-                    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
-                }
-
-                .progress-badge {
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                    background: rgba(0,0,0,0.2);
-                    padding: 4px 8px;
-                    border-radius: 20px;
-                    font-size: 0.7rem;
-                    font-weight: 600;
-                    backdrop-filter: blur(4px);
-                }
-
-                .topic-body {
-                    padding: 1.5rem 1.5rem 0.5rem;
-                }
-
-                .progress-container {
-                    width: 100%;
-                    height: 6px;
-                    background: #e2e8f0;
-                    border-radius: 10px;
-                    overflow: hidden;
-                    margin-bottom: 0.5rem;
-                }
-                
-                .resource-stats {
-                    display: flex;
-                    justify-content: space-between;
-                    font-size: 0.8rem;
-                    color: #94a3b8;
-                    margin-bottom: 1rem;
-                }
-
-                .topic-actions {
-                    padding: 1rem 1.5rem 1.5rem;
-                    display: grid;
-                    grid-template-columns: 1fr 1fr 1fr;
-                    gap: 0.5rem;
-                }
-
-                .action-btn {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 0.6rem;
-                    border: 1px solid #e2e8f0;
-                    background: white;
-                    border-radius: 10px;
-                    font-size: 0.8rem;
-                    color: #475569;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    gap: 5px;
-                }
-
-                .action-btn .icon {
-                    font-size: 1.1rem;
-                }
-
-                .action-btn:hover {
-                    background: #f8fafc;
-                    border-color: #cbd5e1;
-                    color: #3b82f6;
-                }
-
-                .action-btn.notes:hover { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
-                .action-btn.videos:hover { color: #16a34a; background: #f0fdf4; border-color: #bbf7d0; }
-                .action-btn.interview:hover { color: #d97706; background: #fffbeb; border-color: #fde68a; }
-
-                .loader {
-                    width: 48px;
-                    height: 48px;
-                    border: 5px solid #FFF;
-                    border-bottom-color: #3b82f6;
-                    border-radius: 50%;
-                    display: inline-block;
-                    box-sizing: border-box;
-                    animation: rotation 1s linear infinite;
-                }
-
-                @keyframes rotation {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-
-                @keyframes fadeUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-
-                .animate-fade-up {
-                    animation: fadeUp 0.5s ease forwards;
-                }
-            `}</style>
         </div>
     );
 };

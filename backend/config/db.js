@@ -44,12 +44,16 @@ const connectDB = async () => {
     console.log(`📊 Database: ${conn.connection.name}`);
     return true;
   } catch (error) {
+    // Suppress scary errors for Local/File-based users
+    if (error.message.includes('ECONNREFUSED') && uri.includes('127.0.0.1')) {
+      console.log('⚠️  Local MongoDB not running. Switching to File-Based Storage system.');
+      return false;
+    }
+
     console.error(`❌ MongoDB Connection Error: ${error.message}`);
 
-    // Provide helpful error messages
-    if (error.message.includes('ECONNREFUSED')) {
-      console.error('💡 Local MongoDB is not running. Start MongoDB or use MongoDB Atlas.');
-    } else if (error.message.includes('authentication failed')) {
+    // Provide helpful error messages for other cases
+    if (error.message.includes('authentication failed')) {
       console.error('💡 Authentication failed. Check your username and password in MONGO_URI.');
     } else if (error.message.includes('ENOTFOUND') || error.message.includes('getaddrinfo')) {
       console.error('💡 Cannot resolve MongoDB host. Check your MONGO_URI or internet connection.');

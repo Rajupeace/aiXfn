@@ -1,31 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
 
 :root {
-  --primary: #10b981;
-  --primary-soft: rgba(16, 185, 129, 0.1);
-  --login-bg: radial-gradient(circle at center, #010409 0%, #000000 100%);
-  --login-card-bg: rgba(255, 255, 255, 0.03);
-  --login-text: #ffffff;
-  --login-accent: #22d3ee;
-  --login-orb-1: #4f46e5;
-  --login-orb-2: #10b981;
-  --login-glass-border: rgba(255, 255, 255, 0.08);
-  --text-main: #1e293b;
-  /* Keep if used elsewhere, otherwise remove */
+  --primary: #3b82f6;
+  /* Cool Blue */
+  --primary-soft: rgba(59, 130, 246, 0.1);
+  --login-bg: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+  /* Premium White/Grey Gradient */
+  --login-card-bg: rgba(255, 255, 255, 0.85);
+  /* High opacity glass */
+  --login-text: #1e293b;
+  /* Slate 800 */
+  --login-accent: #6366f1;
+  /* Indigo */
+  --login-orb-1: rgba(59, 130, 246, 0.3);
+  --login-orb-2: rgba(16, 185, 129, 0.3);
+  --login-glass-border: rgba(255, 255, 255, 1);
+  --text-main: #0f172a;
   --text-muted: #64748b;
-  /* Keep if used elsewhere, otherwise remove */
-  --shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
-  /* Keep if used elsewhere, otherwise remove */
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
 }
 
+/* Clear legacy dark overrides */
 [data-theme='pearl'] {
   --login-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  --login-card-bg: #ffffff;
-  --login-text: #0f172a;
-  --login-accent: #6366f1;
-  --login-orb-1: rgba(99, 102, 241, 0.2);
-  --login-orb-2: rgba(52, 211, 153, 0.2);
-  --login-glass-border: rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -36,12 +33,8 @@
 
 body {
   overflow-x: hidden;
-  background: #000;
-  transition: background 1s ease;
-}
-
-[data-theme='pearl'] body {
   background: #f8fafc;
+  transition: background 1s ease;
 }
 
 .modern-auth-wrapper {
@@ -70,30 +63,27 @@ body {
 
 .glowing-orb {
   position: absolute;
-  width: 300px;
-  height: 300px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.15;
+  filter: blur(100px);
+  opacity: 0.6;
+  /* Increased opacity for light mode */
   animation: orbOrbit 20s infinite alternate ease-in-out;
   transition: background 1s ease;
 }
 
 .orb-1 {
   background: var(--login-orb-1);
-  top: 10%;
-  left: 10%;
+  top: -10%;
+  left: -10%;
 }
 
 .orb-2 {
   background: var(--login-orb-2);
-  bottom: 10%;
-  right: 10%;
+  bottom: -10%;
+  right: -5%;
   animation-delay: -5s;
-}
-
-[data-theme='pearl'] .glowing-orb {
-  opacity: 0.3;
 }
 
 @keyframes orbOrbit {
@@ -102,7 +92,7 @@ body {
   }
 
   100% {
-    transform: translate3d(100px, 100px, 200px) scale(1.5);
+    transform: translate3d(50px, 50px, 50px) scale(1.2);
   }
 }
 
@@ -113,22 +103,20 @@ body {
   width: 95%;
   max-width: 1250px;
   background: var(--login-card-bg);
-  backdrop-filter: blur(50px) saturate(180%);
-  border: 1px solid var(--login-glass-border);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid white;
   border-radius: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 4rem 2rem;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.08);
+  /* Brighter, softer shadow */
   transform-style: preserve-3d;
-  animation: entrance-3d 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* Removed entrance animation to prevent conflict with Splash Unmount */
+  /* animation: entrance-3d 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; */
   transition: background 0.5s ease, border 0.5s ease;
-}
-
-[data-theme='pearl'] .auth-card-container {
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.05);
 }
 
 @keyframes entrance-3d {

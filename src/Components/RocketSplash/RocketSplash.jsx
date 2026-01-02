@@ -1,152 +1,89 @@
 import React, { useEffect, useState } from 'react';
-import { FaCrown, FaBook, FaRegFileAlt, FaFlask, FaMicroscope, FaGraduationCap, FaRocket, FaAtom, FaDna, FaBrain, FaSun, FaMoon } from 'react-icons/fa';
-import { GiUfo, GiPencilRuler, GiScales, GiProcessor, GiMaterialsScience, GiOpenBook, GiPaper, GiScrollUnfurled } from 'react-icons/gi';
+import { FaRocket, FaCrown, FaAtom, FaBook, FaLaptop, FaGraduationCap, FaFlask, FaMicroscope } from 'react-icons/fa';
+import { GiUfo, GiGalaxy, GiPaper, GiPencilRuler, GiDna1 } from 'react-icons/gi';
 import './RocketSplash.css';
 
 const RocketSplash = ({ onFinish }) => {
-    const [stars, setStars] = useState([]);
     const [isExiting, setIsExiting] = useState(false);
-    const [theme, setTheme] = useState(localStorage.getItem('system-theme') || 'cyber');
-    const brandName = "Friendly Notebook";
+    const [textRevealed, setTextRevealed] = useState(false);
+
+    useEffect(() => {
+        // Trigger text reveal after initial mount
+        setTimeout(() => setTextRevealed(true), 500);
+    }, []);
 
     const handleEnter = () => {
         setIsExiting(true);
         setTimeout(() => {
             if (onFinish) onFinish();
-        }, 800);
+        }, 2000); // 2s exit animation (Slowed down)
     };
-
-    const toggleTheme = (e) => {
-        e.stopPropagation();
-        const newTheme = theme === 'pearl' ? 'cyber' : 'pearl';
-        setTheme(newTheme);
-        document.body.setAttribute('data-theme', newTheme);
-        localStorage.setItem('system-theme', newTheme);
-    };
-
-    useEffect(() => {
-        document.body.setAttribute('data-theme', theme);
-        const newStars = Array.from({ length: 80 }).map((_, i) => ({
-            id: i,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            size: `${Math.random() * 2 + 1}px`,
-            duration: `${Math.random() * 3 + 1}s`,
-            delay: `${Math.random() * 5}s`
-        }));
-        setStars(newStars);
-    }, [theme]);
 
     return (
-        <div className={`rocket-splash-container ${isExiting ? 'exit-active' : ''}`} onClick={handleEnter} data-splash-theme={theme}>
-            {/* Theme Toggle in Splash */}
-            <div className="splash-theme-toggle" onClick={toggleTheme}>
-                {theme === 'pearl' ? <FaMoon /> : <FaSun />}
-                <span>{theme === 'pearl' ? 'DARK MODE' : 'LIGHT MODE'}</span>
+        <div className={`rocket-splash-container ${isExiting ? 'exit-active' : ''}`} onClick={handleEnter}>
+            {/* Background Layers */}
+            <div className="rs-stars-bg"></div>
+            <div className="rs-nebula"></div>
+
+            {/* Floating 3D Educational Debris */}
+            <div className="rs-floating-debris">
+                <FaBook className="debris-item d-book" />
+                <FaLaptop className="debris-item d-laptop" />
+                <FaGraduationCap className="debris-item d-cap" />
+                <FaFlask className="debris-item d-flask" />
+                <FaMicroscope className="debris-item d-scope" />
+                <GiPaper className="debris-item d-paper" />
+                <GiPencilRuler className="debris-item d-ruler" />
+                <GiDna1 className="debris-item d-dna" />
             </div>
 
-            {/* Solar System Background */}
-            <div className="solar-system">
-                <div className="planet p-1"></div>
-                <div className="planet p-2"></div>
-                <div className="planet p-3"></div>
-                <div className="planet p-4"></div>
-            </div>
+            {/* Main Content */}
+            <div className="rs-center-stage">
 
-            <div className="speed-lines">
-                {Array.from({ length: 15 }).map((_, i) => (
-                    <div key={i} className="line" style={{ left: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 2}s` }}></div>
-                ))}
-            </div>
+                {/* 3D Floating Icon wrapper */}
+                <div className="rs-icon-wrapper">
+                    <div className="rs-orbit-ring ring-1"></div>
+                    <div className="rs-orbit-ring ring-2"></div>
+                    <div className="rs-orbit-ring ring-3"></div>
+                    <div className="rs-main-icon">
+                        <FaRocket className="rocket-3d" />
+                    </div>
+                    <div className="rs-thrust-glow"></div>
+                </div>
 
-            <div className="stars">
-                {stars.map(star => (
-                    <div
-                        key={star.id}
-                        className="star"
-                        style={{
-                            left: star.left,
-                            top: star.top,
-                            width: star.size,
-                            height: star.size,
-                            animationDuration: star.duration,
-                            animationDelay: star.delay
-                        }}
-                    ></div>
-                ))}
-            </div>
+                {/* Animated Typography */}
+                <div className={`rs-brand-container ${textRevealed ? 'reveal' : ''}`}>
+                    {/* Main Title Replaces AIXFN LABS */}
+                    <div className="rs-product-identity main-identity">
+                        <div className="rs-product-name-3d large-title">FRIENDLY NOTEBOOK</div>
+                        <div className="rs-product-glow"></div>
+                    </div>
 
-            {/* Floating Educational & Lab Assets */}
-            <div className="floating-assets">
-                {/* Layer 1: Books & Papers */}
-                <div className="asset-item book-1"><FaBook /></div>
-                <div className="asset-item paper-1"><FaRegFileAlt /></div>
-                <div className="asset-item paper-2"><GiPaper /></div>
-                <div className="asset-item scroll-1"><GiScrollUnfurled /></div>
+                    <div className="rs-tagline">
+                        <span className="rs-tag-part">NEXT-GEN STUDENT PORTAL</span>
+                    </div>
+                </div>
 
-                {/* Layer 2: Lab & Science */}
-                <div className="asset-item flask-1"><FaFlask /></div>
-                <div className="asset-item microscope-1"><FaMicroscope /></div>
-                <div className="asset-item atom-1"><FaAtom /></div>
-                <div className="asset-item dna-1"><FaDna /></div>
-
-                {/* Layer 3: Tools & Metrics */}
-                <div className="asset-item ruler-1"><GiPencilRuler /></div>
-                <div className="asset-item scale-1"><GiScales /></div>
-                <div className="asset-item processor-1"><GiProcessor /></div>
-                <div className="asset-item science-1"><GiMaterialsScience /></div>
-
-                {/* Layer 4: Intelligence */}
-                <div className="asset-item cap-1"><FaGraduationCap /></div>
-                <div className="asset-item brain-1"><FaBrain /></div>
-                <div className="asset-item open-book-1"><GiOpenBook /></div>
-            </div>
-
-            <div className="rocket-scene">
-                <div className="rocket-path-zig-zag">
-                    <div className="rocket-wrapper">
-                        <div className="ufo-3d">
-                            <GiUfo className="ufo-icon alien-ship" />
-                            <div className="ufo-beam"></div>
-                            <div className="ufo-energy-ring"></div>
+                {/* Interactive Trigger */}
+                <div className="rs-action-area">
+                    <div className="rs-click-hint">
+                        <span className="rs-click-text">TAP TO LAUNCH</span>
+                        <div className="rs-progress-bar">
+                            <div className="rs-progress-fill"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="brand-gate">
-                <div className="brand-main">
-                    {brandName.split("").map((char, index) => {
-                        const delay = 0.5 + index * 0.08;
-                        return (
-                            <span
-                                key={index}
-                                style={{ animationDelay: `${delay}s` }}
-                                className="letter-3d"
-                            >
-                                {char === " " ? "\u00A0" : char}
-                            </span>
-                        );
-                    })}
-                </div>
-                <div className="creator-tag">
-                    Created by <span className="creator-name">Bobby Martin <FaCrown className="crown-icon" /></span>
-                </div>
+            {/* Footer Signature */}
+            <div className="rs-footer">
+                <span>Vignan's University</span>
+                <span className="rs-separator">|</span>
+                <span>Designed by <span className="rs-author">Bobby Martin <FaCrown size={10} color="#fbbf24" /></span></span>
             </div>
 
-            <div className="interface-hud">
-                <div className="loading-meter">
-                    <div className="meter-fill"></div>
-                </div>
-                <div className="enter-action">
-                    <div className="action-circle">
-                        <GiUfo className="mini-ufo" />
-                    </div>
-                    <span className="action-text">ENGAGE MISSION</span>
-                </div>
-            </div>
-
-            <div className="vignan-identity">Vignan's University • Next-Gen Portal</div>
+            {/* White Flash Layer (Moved to end for Z-Index safety) */}
+            <div className="rs-white-flash"></div>
         </div>
     );
 };

@@ -4,14 +4,14 @@
     "sid": "231FA04434",
     "email": "satvika2812@gmail.com",
     "year": 3,
-    "section": "13",
+    "section": "16",
     "branch": "CSE",
     "password": "reddy@",
     "name": " mary-satvika",
     "studentId": "231FA04434",
     "profilePic": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
     "updatedAt": "2025-12-27T09:04:33.815Z",
-    "studentToken": "d7935bd8-d3fb-4588-91a7-9ba58a2ce87b"
+    "studentToken": "cf7df67e-ad4f-44c1-b621-c99ed404e84b"
   },
   {
     "studentName": "Test Satvika",
@@ -71,5 +71,17 @@
     "createdAt": "2026-01-01T12:20:26.613Z",
     "studentToken": "3a711c9c-3159-437a-be68-9e1c6fd94745",
     "role": "student"
+  },
+  {
+    "id": "c137416b-8591-42d4-9879-de59e35f2d51",
+    "studentName": "Samineni Chanikya Chowdary",
+    "sid": "231FA04860",
+    "email": "231fa04860@gmail.com",
+    "year": "3",
+    "section": "7",
+    "branch": "CSE",
+    "password": "Chani8877",
+    "avatar": "Midnight",
+    "createdAt": "2026-01-02T02:26:24.401Z"
   }
 ]
